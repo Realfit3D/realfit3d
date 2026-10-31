@@ -26,7 +26,7 @@ Adapter 將網頁參數轉為各 worker 的命令，worker 產生的軌跡再交
 GG 先把模擬形狀轉成 UV 遮蔽／法線貼圖，再交給外觀網路和光柵器產生圖片。
 `render_lean.py` 只輸出最終合成影格；`render_turntable.py` 固定一幀、
 更換相機角度，產生網頁多角度預覽。算法與使用方式見
-[GG 渲染說明](../upstream/Gaussian-Garments/REALFIT3D_CHANGES.zh-TW.md)。
+[GG 渲染說明](https://github.com/Realfit3D/Gaussian-Garments/blob/main/REALFIT3D_CHANGES.zh-TW.md)。
 
 `runtime_entry.py` 在子程序啟動 CC／ActorsHQ 時設定其 DEFAULTS；不修改這兩個官方 checkout。GG fork 讀取 `REALFIT3D_GG_*` 環境變數。API 與 CLI 都透過相同設定傳遞這些值，並把專用 Python 所在目錄放到 PATH，讓上游內部的 `python` 子程序使用相同環境。
 

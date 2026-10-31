@@ -3,6 +3,15 @@
 維護紀錄：供版本整合、回溯與測試使用。匯入版本與原始檔案雜湊保留於
 `source_manifest.json`；使用方式與模組流程見 README 及 GG 差異說明。
 
+## 2026-10-31：組織轉移與文件連結
+
+- RealFit3D 與 GG fork 轉移至 GitHub `Realfit3D` 組織；更新 clone 網址、
+  `.gitmodules` 與版本鎖的 repository 來源，保留原有提交歷史和上游基線。
+- README、Web 與中英文透明度指南直接連到 GG fork 的文件，修正 GitHub
+  無法跨 submodule 解析相對路徑造成的 404。GG 文件中的主專案連結同步更新。
+- 新增文件連結測試，檢查跨 submodule 路徑與所連結的 GG 文件是否存在。
+  本次只調整來源設定、文件與測試，不修改模型或訓練算法。
+
 ## 2026-10-21：Stage 2 補件與狀態更新
 
 - GG fork `5c03d7e` 新增 `opacity_training_cameras.py`：以完整校正保留主點與內外參，

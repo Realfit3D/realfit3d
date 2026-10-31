@@ -58,7 +58,7 @@ python -m realfit3d.cli --config configs/paths.local.json tryon \
 
 This prints a plan; add `--execute` to run it. Body and garment assets must already
 be configured for the chosen IDs. Standalone rendering commands are in the
-[GG guide](../upstream/Gaussian-Garments/REALFIT3D_CHANGES.md#opacity-control).
+[GG guide](https://github.com/Realfit3D/Gaussian-Garments/blob/main/REALFIT3D_CHANGES.md#opacity-control).
 
 ## Train After Stage 3
 
@@ -92,7 +92,7 @@ When calibration includes `shape: [height, width]` and Stage 2 has a view list,
 the input sequence's RGB directories are not required. Legacy inputs without
 `shape` use PNG/JPEG dimensions. The configured `gg_data_root` and `gg_aux_root`
 must still exist. Calibration and selection hashes are saved with the training
-configuration. See the [CPU camera check](../upstream/Gaussian-Garments/REALFIT3D_CHANGES.md#opacity-control)
+configuration. See the [CPU camera check](https://github.com/Realfit3D/Gaussian-Garments/blob/main/REALFIT3D_CHANGES.md#opacity-control)
 before starting GPU training.
 
 Actor02's 2026-10-21 delivery provides this image-free layout alongside 50 meshes,

@@ -5,7 +5,7 @@
 | 項目 | 值 |
 |---|---|
 | 原始 repo | https://github.com/eth-ait/Gaussian-Garments.git |
-| 本組 fork | https://github.com/CasualBrave/Gaussian-Garments.git |
+| 本組 fork | https://github.com/Realfit3D/Gaussian-Garments.git |
 | 本機 submodule | `upstream/Gaussian-Garments` |
 | 初始官方基線 | `ceb66fc36598da05b3b3391f4562cdc54d2a2ed2` |
 | 初始 fork 版本 | 同上 |
@@ -29,5 +29,5 @@ ContourCraft 的輸入並執行模擬，GG 渲染入口再把軌跡轉成圖片�
 品質工具提供 mask、相機對應與 mesh 檢查，用於訓練前準備資產。
 
 GG fork 的修改與資料流程見
-[English](../upstream/Gaussian-Garments/REALFIT3D_CHANGES.md) /
-[繁體中文](../upstream/Gaussian-Garments/REALFIT3D_CHANGES.zh-TW.md)。
+[English](https://github.com/Realfit3D/Gaussian-Garments/blob/main/REALFIT3D_CHANGES.md) /
+[繁體中文](https://github.com/Realfit3D/Gaussian-Garments/blob/main/REALFIT3D_CHANGES.zh-TW.md)。

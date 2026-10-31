@@ -46,7 +46,8 @@ git commit -m "Pin GG to the tested RealFit3D revision"
 
 ## 更新與檢查
 
-其他人取得新版主 repo 後，用 `git submodule update --init --recursive` 還原指定版本。
+其他人取得新版主 repo 後，先用 `git submodule sync --recursive` 同步來源網址，
+再用 `git submodule update --init --recursive` 還原指定版本。
 `--remote` 用於主動升級依賴，會選取遠端分支版本；升級後需重新測試並更新 lock。
 
 `python scripts/check_checkout.py` 比對：來源設定、gitlink、實際 HEAD、工作樹是否乾淨。檢查 dirty 時會回報失敗以提醒尚未固定的修改，不會刪除或還原任何檔案。

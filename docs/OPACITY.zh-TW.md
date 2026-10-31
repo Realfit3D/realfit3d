@@ -53,7 +53,7 @@ python -m realfit3d.cli --config configs/paths.local.json tryon \
 
 這條命令先列出計畫，加 `--execute` 才執行；選用的衣物與人體資產須已完成配置。
 單獨執行 GG 渲染的方式見
-[GG 說明](../upstream/Gaussian-Garments/REALFIT3D_CHANGES.zh-TW.md#透明度控制)。
+[GG 說明](https://github.com/Realfit3D/Gaussian-Garments/blob/main/REALFIT3D_CHANGES.zh-TW.md#透明度控制)。
 
 ## Stage 3 後訓練
 
@@ -83,7 +83,7 @@ fork 的 `train_opacity_v3.py` 另提供指定訓練幀、相機、步數及新�
 RGB 影像目錄；舊資料缺少 `shape` 時，仍可從 PNG／JPEG 取得尺寸。
 設定中的 `gg_data_root` 與 `gg_aux_root` 根目錄仍須存在。
 訓練設定會保存校正資料與清單的雜湊。GPU 訓練前可先執行
-[CPU 相機檢查](../upstream/Gaussian-Garments/REALFIT3D_CHANGES.zh-TW.md#透明度控制)。
+[CPU 相機檢查](https://github.com/Realfit3D/Gaussian-Garments/blob/main/REALFIT3D_CHANGES.zh-TW.md#透明度控制)。
 
 Actor02 的 2026-10-21 交付符合這種不含原始影像的配置，另提供每件衣物
 50 幀 mesh、50 張 AO、50 張 normal 與 Stage 2 點雲。
