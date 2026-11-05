@@ -342,6 +342,21 @@ def rebind_all_garments(args, staging_dir: Path, motion_path: Path, source_fits:
         if garment_name in args.pin_waistband_if_snug_garments:
             prepare_cmd += ["--pin-waistband-if-snug", "--fit-ratio-threshold", str(args.fit_ratio_threshold)]
         run(prepare_cmd)
+        config = args.garment_repairs_json.get(garment_name, {})
+        if args.gender in config.get('genders', []):
+            repaired = output_dict_path.with_suffix('.repaired.pkl')
+            backup = output_dict_path.with_suffix('.before_repair.pkl')
+            if backup.exists() or repaired.exists():
+                raise FileExistsError('Use a new run directory for garment repair')
+            run([args.ccraft_python, str(SCRIPT_DIR / 'repair_garment_lbs.py'),
+                 '--input-garment-dict', str(output_dict_path),
+                 '--reference-garment-dict', config['reference_dict'],
+                 '--profile', config['profile'], '--body-model-root', str(args.body_model_root),
+                 '--apply', '--output-garment-dict', str(repaired),
+                 '--report', str(output_dict_path.with_suffix('.repair.json')),
+                 '--preview', str(output_dict_path.with_suffix('.repair.png'))])
+            shutil.copy2(output_dict_path, backup)
+            repaired.replace(output_dict_path)
 
 
 def simulate(args, fixedsize_dicts_dir: Path, motion_path: Path, n_steps: int, output_trajectory: Path) -> None:
@@ -373,6 +388,8 @@ def simulate(args, fixedsize_dicts_dir: Path, motion_path: Path, n_steps: int, o
 
 def opacity_arguments(args):
     arguments = ["--opacity-mode", args.opacity_mode, "--opacity-scale", str(args.opacity_scale)]
+    if args.opacity_garments:
+        arguments += ['--opacity-garments', *args.opacity_garments]
     for mapping in args.v3_controller:
         arguments.extend(["--v3-controller", mapping])
     return arguments
@@ -413,7 +430,7 @@ def stitch(args, renders_dir: Path, video_path: Path) -> None:
         f"folder = {str(renders_dir)!r}\n"
         "files = sorted(os.path.join(folder, f) for f in os.listdir(folder) if f.endswith('.png'))\n"
         f"clip = ImageSequenceClip(files, fps={args.fps})\n"
-        f"clip.write_videofile({str(video_path)!r}, codec='libx264', logger=None)\n"
+        f"clip.write_videofile({str(video_path)!r}, codec='libx264', ffmpeg_params=['-movflags', '+faststart'], logger=None)\n"
     )
     run([args.gaugar_python, "-c", stitch_script])
 
@@ -423,6 +440,9 @@ def main():
     parser.add_argument("--opacity-mode", choices=["direct", "optical_depth", "v3"], default="direct")
     parser.add_argument("--opacity-scale", type=float, default=1.0)
     parser.add_argument("--v3-controller", action="append", default=[], metavar="GARMENT=PATH")
+    parser.add_argument('--opacity-garments', nargs='+', default=[])
+    parser.add_argument('--garment-repairs-json', type=json.loads, default={})
+    parser.add_argument('--skip-preview', action='store_true')
     parser.add_argument("--garment-names", nargs="+", required=True,
         help="Innermost to outermost, 2+ garments (a fixed catalog combo). Each must match a "
              "Gaussian-Garments output_root/ folder.")
@@ -492,6 +512,10 @@ def main():
         help="Default: gg_outputs_fixedsize/ next to --contourcraft-root -- SAME as the other "
              "fixedsize scripts, deliberately, so the per-garment and per-outfit caches are shared.")
     args = parser.parse_args()
+    if not isinstance(args.garment_repairs_json, dict):
+        parser.error('--garment-repairs-json must be an object')
+    if set(args.opacity_garments) - set(args.garment_names):
+        parser.error('--opacity-garments must select trajectory garments')
     if not math.isfinite(args.opacity_scale) or not 0 <= args.opacity_scale <= 1:
         parser.error("--opacity-scale must be between 0 and 1")
     if args.v3_controller and args.opacity_mode != "v3":
@@ -588,30 +612,31 @@ def run_pipeline(args, run_dir: Path, staging_dir: Path, source_trajectory_overr
     fixedsize_dicts_dir = run_dir / "fixedsize_dicts"
     rebind_all_garments(args, staging_dir, motion_path, source_fits, fixedsize_dicts_dir)
 
-    # --- Phase 1: fast static preview ---
-    write_status(run_dir, "preview_simulating", message="Generating quick preview")
-    tpose_motion_path = run_dir / "tpose_motion.npz"
-    make_display_pose_sequence(motion_path, tpose_motion_path)
-    preview_trajectory = run_dir / "preview_trajectory.pkl"
-    simulate(args, fixedsize_dicts_dir, tpose_motion_path, args.preview_steps, preview_trajectory)
+    if not args.skip_preview:
+        # --- Phase 1: fast static preview ---
+        write_status(run_dir, "preview_simulating", message="Generating quick preview")
+        tpose_motion_path = run_dir / "tpose_motion.npz"
+        make_display_pose_sequence(motion_path, tpose_motion_path)
+        preview_trajectory = run_dir / "preview_trajectory.pkl"
+        simulate(args, fixedsize_dicts_dir, tpose_motion_path, args.preview_steps, preview_trajectory)
 
-    write_status(run_dir, "preview_rendering", message="Rendering preview turntable")
-    turntable_dir = run_dir / "turntable"
-    render_turntable(args, preview_trajectory, args.preview_steps, turntable_dir, args.turntable_angles)
-    turntable_frames = sorted(turntable_dir.glob("angle_*.png"))
-    if not turntable_frames:
-        raise RuntimeError(f"Turntable render produced no frames in {turntable_dir}")
-    # angle_000.png is theta=0, the same default camera every other render in
-    # this project uses -- keep it as preview.png too, in case anything still
-    # expects that filename.
-    (run_dir / "preview.png").write_bytes(turntable_frames[0].read_bytes())
+        write_status(run_dir, "preview_rendering", message="Rendering preview turntable")
+        turntable_dir = run_dir / "turntable"
+        render_turntable(args, preview_trajectory, args.preview_steps, turntable_dir, args.turntable_angles)
+        turntable_frames = sorted(turntable_dir.glob("angle_*.png"))
+        if not turntable_frames:
+            raise RuntimeError(f"Turntable render produced no frames in {turntable_dir}")
+        # angle_000.png is theta=0, the same default camera every other render in
+        # this project uses -- keep it as preview.png too, in case anything still
+        # expects that filename.
+        (run_dir / "preview.png").write_bytes(turntable_frames[0].read_bytes())
 
-    write_status(run_dir, "preview_ready", message="Preview ready", preview_ready=True,
-                 turntable_frames=len(turntable_frames))
+        write_status(run_dir, "preview_ready", message="Preview ready", preview_ready=True,
+                     turntable_frames=len(turntable_frames))
 
     # --- Phase 2: full short animation, reusing Phase 1's fit/rebind above ---
     write_status(run_dir, "full_simulating", message=f"Generating full animation ({args.full_steps} steps)",
-                 preview_ready=True)
+                 preview_ready=not args.skip_preview)
     trajectory_path = run_dir / "trajectory.pkl"
     simulate(args, fixedsize_dicts_dir, motion_path, args.full_steps, trajectory_path)
 
@@ -620,14 +645,14 @@ def run_pipeline(args, run_dir: Path, staging_dir: Path, source_trajectory_overr
         total_frames = len(pickle.load(f)["pred"]) - args.discard_frames
 
     write_status(run_dir, "full_rendering", message="Rendering full animation",
-                 preview_ready=True, total_frames=total_frames)
+                 preview_ready=not args.skip_preview, total_frames=total_frames)
     frames_dir = run_dir / "frames"
     render(args, trajectory_path, frames_dir, start_from=args.discard_frames)
 
     video_path = run_dir / "video.mp4"
     stitch(args, frames_dir / "renders", video_path)
 
-    write_status(run_dir, "done", message="Done", preview_ready=True, video_ready=True)
+    write_status(run_dir, "done", message="Done", preview_ready=not args.skip_preview, video_ready=True)
     print(f"\nDone. Preview: {run_dir / 'preview.png'}  Video: {video_path}")
 
 

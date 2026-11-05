@@ -1,0 +1,24 @@
+{
+  "defaults": {"frames": "auto", "fps": 30},
+  "jobs": [
+    {
+      "garments": ["Actor02_lower", "Actor02_upper"],
+      "gender": "male",
+      "heights": [175],
+      "weights": [75],
+      "motions": ["35_01"],
+      "opacity_mode": "direct",
+      "opacities": [1.0]
+    },
+    {
+      "garments": ["Actor02_lower", "Actor02_upper"],
+      "gender": "male",
+      "heights": [175],
+      "weights": [75],
+      "motions": ["35_01"],
+      "opacity_mode": "v3",
+      "opacity_garments": ["Actor02_upper"],
+      "opacities": [0.5]
+    }
+  ]
+}

@@ -3,6 +3,25 @@
 維護紀錄：供版本整合、回溯與測試使用。匯入版本與原始檔案雜湊保留於
 `source_manifest.json`；使用方式與模組流程見 README 及 GG 差異說明。
 
+## 2026-11-05：影片預計算與初始化修復
+
+- 新增 `library render`：從工作單展開衣物、身形、動作及透明度組合，呼叫既有
+  CC worker 與 GG renderer，產出 MP4 和逐片執行紀錄。預設只檢查輸入並列出計畫。
+- 批次以程式、模型、動作及修復設定的雜湊區分工作目錄；相同依賴可重用人體擬合、
+  衣物準備快取和完成影片。輸入資產只讀，修改型快取複製到獨立輸出目錄。
+- 新增 `/library/`：依影片索引提供已有組合與 V3 透明度影片，原 `/` 按需試衣保留。
+  API 支援 MP4 range request，只公開索引、縮圖與影片，不公開執行日誌和模型。
+- 共用 worker 在 rebind 後接入可選的參考衣物修復：以人體蒙皮權重辨識區域，
+  以參考形狀與 harmonic transition 修正初始化，再通過幾何品質檢查才進入模擬。
+  失敗時停止該工作並保留報告；未指定修復設定時沿用既有流程。
+- GG V3 固定使用 Stage 3 checkpoint 載入後的參考 Gaussian 座標，避免動作改變
+  controller 的空間輸入。新增指定衣物透明度，未選衣物保持原始 opacity。
+- 本機 CPU 驗證：主專案 52 項、GG 25 項通過；幾何 21 項通過，1 項因缺少
+  Open3D 跳過。Node 選項測試及桌面／手機瀏覽器播放測試通過。
+  瀏覽器使用既有範例影片；本次未啟動 GPU，也未更新伺服器 checkout。
+- 使用流程見 [VIDEO_LIBRARY.md](VIDEO_LIBRARY.md) 及
+  [繁中指南](VIDEO_LIBRARY.zh-TW.md)；匯入版本和檔案雜湊見 `source_manifest.json`。
+
 ## 2026-10-31：組織轉移與文件連結
 
 - RealFit3D 與 GG fork 轉移至 GitHub `Realfit3D` 組織；更新 clone 網址、
@@ -84,6 +103,6 @@
 | LBS／ICP 初始化 | 先保留獨立前處理 | 交付腳本在無合格 ICP 候選時的 fallback 與 PDF 描述不同，需對齊 |
 | GG 精簡渲染／烘焙設定 | GG fork 或本組渲染入口 | 保留 baseline 與加速設定，不將低採樣當成同品質 |
 | 透明度 | controller 訓練＋GG renderer＋Web／CLI | Actor02 兩件衣物渲染已驗證；完整重訓及重疊多層材質案例待驗證 |
-| 固定選項快取 | RealFit3D 主專案 | 待實作跨請求快取與失效條件 |
+| 固定選項快取 | RealFit3D 主專案 | 批次依賴指紋、身形／衣物快取與影片重用已實作；鄰近身形插值尚未實作 |
 
 修改紀錄欄位：來源 repo／檔案／commit、修改目的、行為變更、測試與已知限制。

@@ -17,8 +17,14 @@ Changing this setting does not train a model.
   `1 - (1 - alpha)^m(s)`.
 
 All modes preserve the original Gaussian opacity at 1 and hide garments at 0.
-V3 shares one requested scale across the outfit but loads one controller per
-garment. It controls rendered transparency, not cloth mechanics or refraction.
+On-demand try-on shares one requested scale across the outfit and loads one controller
+per garment. Batch video jobs and standalone GG rendering can select target garments;
+see [video-library controls](VIDEO_LIBRARY.md#opacity). This controls rendered
+transparency, not cloth mechanics or refraction.
+
+Inference captures canonical Gaussian positions after loading Stage 3, before
+applying the first simulated pose. V3 uses that fixed copy throughout the animation;
+the mesh and rendered positions still change each frame.
 
 ## Configure a V3 Asset
 

@@ -14,5 +14,9 @@
   "body_model_root": "/path/to/ContourCraft/ccraft_data/aux_data/body_models",
   "reference_motion": "/path/to/ContourCraft/CMU/01/01_01_stageii.npz",
   "checkpoint": "/path/to/ContourCraft/ccraft_data/trained_models/contourcraft.pth",
-  "output_root": "/path/to/gg_outputs_fixedsize"
+  "output_root": "/path/to/gg_outputs_fixedsize",
+  "package_root": "/path/to/tryon-package",
+  "library_root": "/path/to/realfit-videos",
+  "garment_repairs": {},
+  "v3_controllers": {}
 }

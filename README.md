@@ -15,6 +15,8 @@ The local web interface, CLI, and runtime adapters are implemented.
 **End-to-end GPU try-on and training validation are pending.**
 Opacity controls are connected to Web, CLI, and both GG rendering entries.
 V3 uses a separate controller checkpoint for each garment.
+Precomputed video playback is available at `/library/`; batch generation and
+opt-in garment initialization repair share the existing runtime workers.
 
 ## Quick Start
 
@@ -46,6 +48,7 @@ Do not execute upstream installation scripts without reviewing them.
 
 | Topic | Guide |
 |---|---|
+| Precomputed videos, playback, and initialization repair | [English](docs/VIDEO_LIBRARY.md) / [Traditional Chinese](docs/VIDEO_LIBRARY.zh-TW.md) |
 | GG fork changes, sources, and exclusions | [English](https://github.com/Realfit3D/Gaussian-Garments/blob/main/REALFIT3D_CHANGES.md) / [Traditional Chinese](https://github.com/Realfit3D/Gaussian-Garments/blob/main/REALFIT3D_CHANGES.zh-TW.md) |
 | Web configuration, API, and deployment limits | [Web integration](docs/WEB.md) (Traditional Chinese) |
 | Opacity training, asset configuration, and rendering | [English](docs/OPACITY.md) / [Traditional Chinese](docs/OPACITY.zh-TW.md) |

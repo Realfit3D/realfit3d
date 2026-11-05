@@ -43,6 +43,25 @@ def create_app(settings=None, runtime=None):
                                lowers=[g for g in garments.values() if g["slot"] == "lower"],
                                motions=catalog["motions"], genders=catalog["genders"], enumerate=enumerate)
 
+    @app.get('/library/')
+    def video_library():
+        return render_template('library.html')
+
+    @app.get('/library/media/<path:relpath>')
+    def library_media(relpath):
+        if not settings.get('library_root'):
+            return 'Configure library_root to serve precomputed videos', 503
+        root = Path(settings['library_root']).resolve()
+        path = (root / relpath).resolve()
+        public_index = relpath in ('manifest.json', 'catalog.json')
+        image = relpath.startswith('thumbnails/') and path.suffix.lower() in ('.png', '.jpg', '.jpeg')
+        if root not in path.parents or not (public_index or image or path.suffix.lower() == '.mp4'):
+            abort(403)
+        response = send_from_directory(root, relpath, conditional=True)
+        if public_index:
+            response.headers['Cache-Control'] = 'no-store'
+        return response
+
     @app.get("/garment_thumbnail/<name>")
     def thumbnail(name):
         garment = garments.get(name)

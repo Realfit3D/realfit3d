@@ -19,6 +19,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path)
     commands = parser.add_subparsers(dest='action', required=True)
+    library = commands.add_parser('library', help='Plan/render precomputed videos or rebuild their index')
+    library.add_argument('operation', choices=['render', 'index'])
+    library.add_argument('--jobs', type=Path)
+    library.add_argument('--execute', action='store_true')
     doctor = commands.add_parser('doctor')
     doctor.add_argument('--probe', action='store_true', help='Check import specs in configured Python environments')
     assets = commands.add_parser('assets')
@@ -51,6 +55,13 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         settings = load_settings(args.config)
+        if args.action == 'library':
+            from realfit3d.precompute.commands import run_batch, index_library
+            if args.operation == 'index':
+                return index_library(args.config, args.execute)
+            if not args.jobs:
+                raise ValueError('library render requires --jobs')
+            return run_batch(args.config, args.jobs, args.execute)
         if args.action == 'doctor':
             report = inspect(settings, args.probe)
             print(json.dumps(report, indent=2))

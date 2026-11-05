@@ -136,6 +136,90 @@
           "sha256": "7426518acf98a73c894216e9d7eff2c07f2c369bc75f5b68341a2ba09ab29ebc"
         }
       ]
+    },
+    {
+      "repository": "https://github.com/Realfit3D/frontend_temp",
+      "commit": "2e2dbb871d217b318790868ba165bc15998d369b",
+      "branch": "new-frontend",
+      "files": [
+        {
+          "path": "new_frontend/video_generation/toolkit_common.py",
+          "sha256": "94a333aeaf97963b363457cee2dad1c2995ad077cd37753dc42b4920f59b4cb1",
+          "destination": "src/realfit3d/precompute/toolkit_common.py"
+        },
+        {
+          "path": "new_frontend/video_generation/render_one_video.py",
+          "sha256": "14255881d6ce3cf79bea8692fd2fc208320d6b7ca2b327d732a461b4e035f9c7",
+          "destination": "src/realfit3d/precompute/render_one_video.py"
+        },
+        {
+          "path": "new_frontend/video_generation/build_index.py",
+          "sha256": "e405a89ffad002153109c2f8fc55d9bd84d202cd223968a2c6e336832f124abe",
+          "destination": "src/realfit3d/precompute/build_index.py"
+        },
+        {
+          "path": "new_frontend/web_frontend/index.html",
+          "sha256": "1ddceaec6f25b8e0af0bf14f7f775f4e52105b180097f17bbf090c3f4d15f329",
+          "destination": "apps/web/templates/library.html"
+        },
+        {
+          "path": "new_frontend/web_frontend/library.js",
+          "sha256": "c0b8946e83cc136409b5189f0aadd5e143f44e64ca0309a9689cba5616c43e2a",
+          "destination": "apps/web/static/library.js"
+        },
+        {
+          "path": "new_frontend/video_generation/overlay/Gaussian-Garments/inference.py",
+          "sha256": "8d4e447a9338c1d69baba28374057d928b6c9a86122266c09acab165b4040829",
+          "destination": "upstream/Gaussian-Garments/inference.py"
+        }
+      ]
+    },
+    {
+      "repository": "https://github.com/Realfit3D/frontend_temp",
+      "commit": "4bd1644e14f9da4f84371fc5dea4d66c71869cbb",
+      "branch": "garment-lbs-repair",
+      "files": [
+        {
+          "path": "new_frontend/video_generation/overlay/ContourCraft/repair_garment_lbs.py",
+          "sha256": "7e246366e58dae9e1584e433e5545894d5541df1732aa0da73e29afc77ef4edb",
+          "destination": "src/realfit3d/workers/contourcraft/repair_garment_lbs.py"
+        },
+        {
+          "path": "new_frontend/video_generation/overlay/ContourCraft/repair_sleeve_lbs.py",
+          "sha256": "5684877fa7a529ab70712d0e98faa6203fc878f8d6823467c70c38dff72ec637",
+          "destination": "src/realfit3d/workers/contourcraft/repair_sleeve_lbs.py"
+        },
+        {
+          "path": "new_frontend/video_generation/overlay/ContourCraft/reference_transition.py",
+          "sha256": "0b1be95bc92b097bde3f925b0e3f0bcd865fe865aa8da8135467a305bcd3736c",
+          "destination": "src/realfit3d/workers/contourcraft/reference_transition.py"
+        },
+        {
+          "path": "new_frontend/video_generation/overlay/ContourCraft/body_collider.py",
+          "sha256": "faf8def35b52119c5c9021e46f9e528977e494672b03e4929dc4e7341af9259b",
+          "destination": "src/realfit3d/workers/contourcraft/body_collider.py"
+        },
+        {
+          "path": "new_frontend/video_generation/repair_profiles/upper.example.json",
+          "sha256": "6f3d3b44ddf81e702ef23a151e2eca1744bd8ab3f012c8a948af720c7fb1df80",
+          "destination": "configs/repair_profiles/upper.example.json"
+        },
+        {
+          "path": "new_frontend/video_generation/repair_profiles/lower.example.json",
+          "sha256": "01d7f32485ebadd7f6323528d61d2e69559eec82e4dddfd713bddd738a38dcb7",
+          "destination": "configs/repair_profiles/lower.example.json"
+        },
+        {
+          "path": "new_frontend/video_generation/repair_profiles/long_lower.example.json",
+          "sha256": "2de53fe66c00b4444f852a84d186d3c6b42150c44f112ee95e591121a9255910",
+          "destination": "configs/repair_profiles/long_lower.example.json"
+        },
+        {
+          "path": "new_frontend/video_generation/tests/test_garment_repair.py",
+          "sha256": "928988a95de5a774fb4dc8de374bffe4f21ac61f432241021681971772b78f96",
+          "destination": "tests/geometry/test_garment_repair.py"
+        }
+      ]
     }
   ],
   "note": "Source hashes, not installed-file hashes. Some listed sources are compared but not migrated; see INTEGRATION_STATUS.md. Modified pipeline and extracted Web files intentionally differ."

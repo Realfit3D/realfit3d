@@ -32,6 +32,18 @@ def load_settings(filename=None):
                       ('actorshq_root', 'ActorsHQ-for-Gaussian-Garments')]:
         settings.setdefault(key, str(ROOT / 'upstream' / name))
     settings.setdefault('output_root', str(ROOT / 'storage'))
+    if not isinstance(settings.get('garment_repairs', {}), dict):
+        raise ValueError('garment_repairs must be an object')
+    for cfg in settings.get('garment_repairs', {}).values():
+        if not isinstance(cfg, dict):
+            raise ValueError('Each garment repair must be an object')
+        for key in ('reference_dict', 'profile'):
+            if cfg.get(key):
+                cfg[key] = str((base / Path(cfg[key]).expanduser()).resolve())
+    settings['v3_controllers'] = {
+        name: str((base / Path(path).expanduser()).resolve())
+        for name, path in settings.get('v3_controllers', {}).items()
+    }
     return settings
 
 

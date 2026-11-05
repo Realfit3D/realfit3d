@@ -8,6 +8,7 @@ from pathlib import Path
 from realfit3d.settings import runtime_environment
 from realfit3d.assets import inspect_asset
 from realfit3d.contracts import opacity_parameters
+from realfit3d.fitting import repair_config
 
 WORKERS = Path(__file__).resolve().parents[1] / "workers" / "contourcraft"
 ENTRY = WORKERS.parent / 'runtime_entry.py'
@@ -111,6 +112,9 @@ class PreviewRuntime:
         for key in ["contourcraft_root", "gaugar_root", "body_model_root", "checkpoint", "ccraft_python", "gaugar_python"]:
             command.extend(["--" + key.replace("_", "-"), str(self.path(key))])
         command.extend(self.opacity_options(upper, lower, opacity_mode, opacity_scale))
+        repairs = repair_config(self.settings, [lower['name'], upper['name']], body['gender'])
+        if repairs:
+            command.extend(['--garment-repairs-json', json.dumps(repairs)])
         return self.wrap_cc(command)
 
     def wrap_cc(self, command):

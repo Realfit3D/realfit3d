@@ -10,6 +10,7 @@
 | 離線入口 | prepare、initialize、reconstruct、register-template、register-sequence、appearance、opacity、convert、dynamics | V3 已支援不含原始影像的相機配置，Actor02 上下衣通過 CPU 相機檢查；完整重訓尚未執行 |
 | 品質工具 | 8 個 mask／相機／mesh／資料切分工具 | 算法沿用 backend；TSDF 白名單需手動接入，門檻待資料集驗證 |
 | 資產檢查 | 實際消費路徑、可選 SHA256、基本 trajectory 檢查 | 拓撲、人體座標與 checkpoint 相容性需另外核對 |
+| 預計算影片庫 | 批次工作單、依賴指紋快取、可選初始化修復、影片索引與選播 | CPU、幾何與桌面／手機播放測試通過；新修復／V3 組合待 GPU 資產驗收 |
 
 ## 使用順序
 
@@ -59,7 +60,11 @@ Web／tryon 統一使用前端交接版，包含 fit-aware waistband pin、node_
 pin-loop 選項及可選 collision radius。較早的後端版本保留作為比較來源。
 
 experimental_smplx_pose_transfer 保留為實驗分支，其 ICP fallback 行為待驗證。
-固定身形預計算、跨任務結果快取與鄰近身形加速列入後續開發。
+固定身形的批次影片預計算、相同輸入的身形／解纏快取及影片選播已接入，見
+[影片庫指南](VIDEO_LIBRARY.zh-TW.md)。鄰近身形插值加速尚未實作。
+
+2026-11-05：新增可選的參考衣物初始化修復，以及 V3 固定參考座標修正。
+下方 Actor02 GPU 結果屬先前版本；本次組合的 GPU 驗收尚未執行。
 
 ## 整合工作進度
 

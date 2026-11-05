@@ -1,0 +1,17 @@
+{
+  "mode": "restore-rebind",
+  "regions": [
+    "left_leg",
+    "right_leg"
+  ],
+  "restore_trigger": "axial",
+  "membership_threshold": 0.45,
+  "damage_fraction": 0.1,
+  "max_displacement_fraction": 0.75,
+  "max_binding_distance_fraction": 0.5,
+  "max_edge_strain": 0.35,
+  "max_support_fraction": 0.8,
+  "centering_fraction": 0.3,
+  "align_limb_ends": false,
+  "clearance_m": 0.006
+}

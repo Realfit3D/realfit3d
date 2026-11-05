@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RealFit3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ground: #FFFFFF;
+  --surface: #F3F3F1;
+  --line: #DADAD5;
+  --divider: #EDEDEA;
+  --ink: #141416;
+  --muted: #63636A;
+  --disabled: #A3A3A8;
+  --accent: #3B4CCA;
+  --font: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--ground); color: var(--ink); font-family: var(--font); -webkit-tap-highlight-color: transparent; }
+button, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+.brand { font-size: 13px; font-weight: 700; letter-spacing: 0; }
+.label { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: 0; }
+
+/* ---------- 共用元件 ---------- */
+.choice {
+  height: 64px; border-radius: 16px; border: 1.5px solid var(--line);
+  background: var(--ground); font-size: 18px; font-weight: 500;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.choice[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.select { position: relative; }
+.select select {
+  appearance: none; -webkit-appearance: none; width: 100%; height: 58px;
+  border-radius: 16px; border: 1.5px solid var(--line); background: var(--ground);
+  padding: 0 48px 0 18px; font-size: 18px; font-weight: 500; color: var(--muted);
+}
+.select select.filled { border-color: var(--ink); color: var(--ink); }
+.select svg { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+
+.cta {
+  height: 58px; border-radius: 29px; border: 0; background: var(--ink); color: #fff;
+  font-size: 17px; font-weight: 700; letter-spacing: 0;
+  display: flex; align-items: center; justify-content: center; gap: 10px; transition: background .2s;
+}
+.cta:disabled { background: #E4E4E0; color: #8A8A90; cursor: default; }
+
+.choice:disabled { border-style: dashed; border-color: #D0D0CC; color: var(--disabled); cursor: default; }
+.status { margin: 0 0 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 15px; color: var(--muted); }
+
+.pill {
+  flex: 1; height: 40px; border-radius: 20px; border: 1.5px solid var(--line);
+  background: var(--ground); font-size: 15px; font-weight: 500; transition: background .15s, color .15s;
+}
+.pill[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.pill:disabled { border-style: dashed; color: var(--disabled); border-color: #D0D0CC; cursor: default; }
+
+.card { flex: none; width: 76px; padding: 0; border: 0; background: transparent; text-align: left; scroll-snap-align: start; }
+.card .thumb {
+  width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; border: 2px solid transparent;
+  background: var(--surface); display: flex; align-items: center; justify-content: center; overflow: hidden;
+  transition: border-color .15s;
+}
+.card img { width: 100%; height: 100%; padding: 6px; object-fit: contain; }
+.card .name { margin-top: 4px; font-size: 11px; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card[aria-pressed="true"] .thumb { border-color: var(--ink); }
+.card[aria-pressed="true"] .name { font-weight: 700; }
+.card:disabled { cursor: default; }
+.card:disabled .thumb { opacity: .35; border: 2px dashed #D0D0CC; }
+.card:disabled .name { color: var(--disabled); }
+
+/* ---------- 第一頁：身形 ---------- */
+#body-page { min-height: 100dvh; display: flex; flex-direction: column; }
+#body-page .hero { display: none; }
+#body-page .form { flex: 1; display: flex; flex-direction: column; padding: 16px 20px 24px; }
+.form-top { height: 40px; display: flex; align-items: center; justify-content: space-between; }
+.form-top .step { font-size: 13px; color: var(--muted); letter-spacing: 0; }
+.form h2 { margin: 28px 0 6px; font-size: 30px; line-height: 1.25; font-weight: 700; letter-spacing: 0; }
+.form .sub { margin: 0 0 32px; font-size: 15px; color: var(--muted); }
+.fields { flex: 1; display: flex; flex-direction: column; gap: 28px; }
+.field { display: flex; flex-direction: column; gap: 10px; }
+.genders { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.selects { display: flex; flex-direction: column; gap: 28px; }
+#body-page .cta { margin-top: 24px; }
+
+/* ---------- 第二頁：試穿 ---------- */
+#try-page { height: 100dvh; display: flex; flex-direction: column; }
+.topbar { height: 56px; flex: none; padding: 0 10px; display: flex; align-items: center; gap: 6px; }
+.topbar .brand, .topbar .now, .topbar .edit { display: none; }
+.icon-btn { width: 44px; height: 44px; border-radius: 22px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; }
+.body-chip {
+  flex: 1; height: 40px; border-radius: 20px; border: 0; background: var(--surface);
+  font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.topbar .spacer { width: 44px; flex: none; }
+
+.try-layout { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.stage { flex: 1; min-height: 0; position: relative; background: var(--ground); display: flex; justify-content: center; align-items: center; }
+/* 影片縮放比例：想再大或再小，只要改這個百分比（100% = 撐滿舞台高度） */
+.stage video { height: 70%; max-width: 100%; aspect-ratio: 3 / 4; object-fit: contain; transition: opacity .3s; }
+.stage video.hide { opacity: 0; }
+.overlay {
+  position: absolute; inset: 0; background: var(--ground);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 0 24px;
+}
+.overlay .title { font-size: 18px; font-weight: 700; }
+.overlay .hint { font-size: 14px; color: var(--muted); }
+.overlay .circle { width: 88px; height: 88px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; }
+.spinner { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #E4E4E0; border-top-color: var(--accent); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.retry { margin-top: 6px; height: 44px; padding: 0 22px; border-radius: 22px; border: 1.5px solid var(--ink); background: var(--ground); font-size: 15px; font-weight: 500; }
+.caption {
+  position: absolute; left: 14px; bottom: 12px; height: 30px; padding: 0 12px; border-radius: 15px;
+  background: rgba(255, 255, 255, .92); border: 1px solid #E4E4E0;
+  display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; max-width: calc(100% - 28px);
+}
+.caption .dot { width: 6px; height: 6px; border-radius: 3px; background: var(--accent); flex: none; }
+.caption span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.panel { flex: none; border-top: 1px solid var(--divider); padding: 10px 0 calc(12px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; }
+.panel .section-head { display: none; }
+.motions { display: flex; gap: 8px; padding: 0 14px; }
+/* 衣服不透明度拉桿：只停在實際有影片的刻度；沒有透明影片時整個區塊隱藏 */
+.opacity-box { padding: 0 14px; }
+.opacity-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.opacity-title .val { font-size: 15px; font-weight: 700; }
+.opacity-slider { display: block; width: 100%; height: 36px; margin: 4px 0 0; accent-color: var(--ink); cursor: pointer; }
+.opacity-slider:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+.opacity-ticks { display: flex; justify-content: space-between; padding: 0 6px; margin-top: -2px; }
+.opacity-ticks button {
+  border: 0; background: none; padding: 6px 4px; min-width: 44px; font-size: 14px; font-weight: 500; color: var(--ink);
+}
+.opacity-ticks button[aria-pressed="true"] { font-weight: 700; }
+.opacity-ticks button:disabled { color: var(--disabled); cursor: default; text-decoration: line-through; text-decoration-color: #D0D0CC; }
+.garment-row { display: flex; align-items: center; gap: 8px; padding-left: 14px; }
+.garment-row .row-label { flex: none; width: 20px; writing-mode: vertical-rl; letter-spacing: 0; }
+.garments {
+  flex: 1; min-width: 0; display: flex; gap: 10px; overflow-x: auto; padding-right: 14px;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.garments::-webkit-scrollbar { display: none; }
+
+/* ---------- 電腦版（寬螢幕、投影） ---------- */
+@media (min-width: 900px) {
+  .label { font-size: 18px; }
+
+  #body-page { flex-direction: row; }
+  #body-page .hero {
+    display: flex; flex: 0 0 42%; background: var(--surface); padding: 48px 64px;
+    flex-direction: column; justify-content: space-between; gap: 48px;
+  }
+  .hero .brand { font-size: 16px; letter-spacing: 0; }
+  .hero h1 { margin: 0; font-size: 56px; line-height: 1.15; font-weight: 700; letter-spacing: 0; }
+  .hero .steps { display: flex; gap: 32px; font-size: 18px; }
+  .hero .steps .on { font-weight: 700; border-bottom: 3px solid var(--ink); padding-bottom: 6px; }
+  .hero .steps .off { color: var(--muted); }
+  #body-page .form { justify-content: center; padding: 64px 7%; }
+  .form-top, .form .sub { display: none; }
+  .form h2 { margin: 0 0 44px; font-size: 40px; }
+  .fields { flex: none; gap: 44px; }
+  .field { gap: 14px; }
+  .genders { gap: 16px; }
+  .choice { height: 76px; border-radius: 20px; border-width: 2px; font-size: 24px; }
+  .selects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .select select { height: 76px; border-radius: 20px; border-width: 2px; font-size: 24px; padding: 0 60px 0 24px; }
+  .select svg { right: 24px; width: 26px; height: 26px; }
+  #body-page .cta { margin-top: 44px; align-self: flex-start; min-width: 320px; height: 72px; padding: 0 40px; border-radius: 36px; font-size: 22px; }
+
+  .topbar { height: 84px; padding: 0 48px; border-bottom: 1px solid var(--divider); gap: 14px; }
+  .topbar .icon-btn, .topbar .spacer { display: none; }
+  .topbar .brand { display: block; font-size: 16px; letter-spacing: 0; margin-right: auto; }
+  .topbar .now { display: block; font-size: 16px; color: var(--muted); }
+  .body-chip { flex: none; height: 48px; padding: 0 22px; border-radius: 24px; font-size: 20px; pointer-events: none; }
+  .body-chip svg { display: none; }
+  .topbar .edit {
+    display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 24px;
+    border: 2px solid var(--ink); background: var(--ground); font-size: 18px; font-weight: 500;
+  }
+
+  .try-layout { flex-direction: row; }
+  .stage { flex: 1 1 50%; }
+  .overlay .title { font-size: 28px; }
+  .overlay .hint { font-size: 18px; }
+  .overlay .circle { width: 120px; height: 120px; }
+  .spinner { width: 64px; height: 64px; border-width: 4px; }
+  .retry { height: 56px; padding: 0 32px; border-radius: 28px; border-width: 2px; font-size: 18px; }
+  .caption { left: 50%; transform: translateX(-50%); bottom: 24px; height: 44px; padding: 0 20px; border-radius: 22px; font-size: 18px; }
+  .caption .dot { width: 8px; height: 8px; }
+
+  .panel { flex: 1 1 50%; overflow-y: auto; border-top: 0; border-left: 1px solid var(--divider); padding: 36px 56px; gap: 32px; }
+  .panel .section-head { display: flex; align-items: baseline; gap: 12px; }
+  .panel .section-head .count { font-size: 16px; color: var(--muted); }
+  .panel-section { display: flex; flex-direction: column; gap: 14px; }
+  .motions { padding: 0; gap: 12px; flex-wrap: wrap; }
+  .opacity-box { padding: 0; }
+  .opacity-title .val { font-size: 20px; }
+  .opacity-slider { height: 44px; }
+  .opacity-ticks button { font-size: 18px; min-width: 56px; padding: 8px 6px; }
+  .pill { flex: 1 1 140px; height: 60px; border-radius: 30px; border-width: 2px; font-size: 21px; }
+  .garment-row { display: block; padding: 0; }
+  .garment-row .row-label { display: none; }
+  .garments { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 14px; overflow: visible; padding: 0; }
+  .card { width: auto; min-width: 0; }
+  .card .thumb { border-radius: 18px; border-width: 3px; }
+  .card img { padding: 10px; }
+  .card .name { margin-top: 8px; font-size: 17px; line-height: 1.35; }
+}
+.mode-nav { display:flex; gap:20px; padding:12px 24px; border-bottom:1px solid #ddd; font-size:14px; }
+.opacity-ticks { flex-wrap:wrap; gap:8px; }
+.opacity-title { flex-wrap:wrap; gap:8px; }
+.opacity-title .val { font-size:16px; overflow-wrap:anywhere; }
+</style>
+</head>
+<body>
+<nav class="mode-nav"><a href="/">按需試衣</a><span aria-current="page">影片試衣間</span></nav>
+
+<!-- 第一頁：身形 -->
+<section id="body-page">
+  <aside class="hero">
+    <span class="brand">RealFit3D</span>
+    <h1>換上它，<br>讓它動起來。</h1>
+    <div class="steps"><span class="on">01　身形</span><span class="off">02　試穿</span></div>
+  </aside>
+  <main class="form">
+    <div class="form-top"><span class="brand">RealFit3D</span><span class="step">1 / 2</span></div>
+    <h2>你的身形</h2>
+    <p class="sub">選好三項，馬上開始試穿</p>
+    <div class="status" id="lib-status" role="status"><span id="lib-status-text">載入中…</span><button type="button" class="retry" id="lib-retry" hidden>重新載入</button></div>
+    <div class="fields">
+      <div class="field">
+        <span class="label">性別</span>
+        <div class="genders" id="genders"></div>
+      </div>
+      <div class="selects">
+        <label class="field">
+          <span class="label">身高</span>
+          <span class="select">
+            <select id="height"></select>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </span>
+        </label>
+        <label class="field">
+          <span class="label">體重</span>
+          <span class="select">
+            <select id="weight"></select>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </span>
+        </label>
+      </div>
+    </div>
+    <button type="button" class="cta" id="go-try" disabled>
+      開始試穿
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </main>
+</section>
+
+<!-- 第二頁：試穿 -->
+<section id="try-page" hidden>
+  <header class="topbar">
+    <button type="button" class="icon-btn" data-go-body aria-label="返回修改身形">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <span class="brand">RealFit3D</span>
+    <span class="now">目前身形</span>
+    <button type="button" class="body-chip" data-go-body aria-label="目前身形，點一下修改">
+      <span id="summary"></span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#63636A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>
+    </button>
+    <button type="button" class="edit" data-go-body>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>
+      修改
+    </button>
+    <span class="spacer"></span>
+  </header>
+
+  <div class="try-layout">
+    <div class="stage">
+      <video id="video" class="hide" autoplay loop muted playsinline></video>
+
+      <div class="overlay" id="state-empty">
+        <div class="circle">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#141416" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7a2 2 0 1 1 2-2"/><path d="M12 7v1.5L3 15a1.2 1.2 0 0 0 .7 2.2h16.6a1.2 1.2 0 0 0 .7-2.2L12 8.5"/></svg>
+        </div>
+        <span class="title" id="empty-text">選一件上身和一件下身</span>
+      </div>
+      <div class="overlay" id="state-loading" hidden>
+        <div class="spinner"></div>
+        <span class="hint">換裝中…</span>
+      </div>
+      <div class="overlay" id="state-error" hidden>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#141416" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>
+        <span class="title">這段影片暫時無法播放</span>
+        <span class="hint">換一件衣服或動作試試</span>
+        <button type="button" class="retry" id="retry">重新載入</button>
+      </div>
+      <div class="caption" id="caption" hidden><span class="dot"></span><span id="caption-text"></span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-section">
+        <div class="section-head"><span class="label">動作</span></div>
+        <div class="motions" id="motions"></div>
+      </div>
+      <div class="panel-section" id="opacity-section" hidden>
+        <div class="opacity-box">
+          <div class="opacity-title"><span class="label">衣服不透明度</span><span class="val" id="opacity-val"></span></div>
+          <input type="range" class="opacity-slider" id="opacity" min="0" max="0" step="1" value="0" aria-label="衣服不透明度">
+          <div class="opacity-ticks" id="opacity-ticks"></div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="section-head"><span class="label">上身</span><span class="count" id="upper-count"></span></div>
+        <div class="garment-row"><span class="label row-label">上身</span><div class="garments" id="uppers"></div></div>
+      </div>
+      <div class="panel-section">
+        <div class="section-head"><span class="label">下身</span><span class="count" id="lower-count"></span></div>
+        <div class="garment-row"><span class="label row-label">下身</span><div class="garments" id="lowers"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="/static/library.js"></script>
+<script>
+/* ============================================================
+ * 資料來源：影片資料庫資料夾（要有 manifest.json、catalog.json、videos/、thumbnails/）。
+ * 正式部署時只要改這一個路徑。選項與影片全部由 library.js 依這兩個檔案決定，這裡不寫死任何選項。
+ * ============================================================ */
+const LIB = '/library/media/';
+let lib = null;
+
+/* ============================================================
+ * 介面邏輯
+ * 選項不可選（變灰）的規則在 library.js：沒有任何影片符合時才會變灰。
+ * ============================================================ */
+const state = { gender: null, height: null, weight: null, upper: null, lower: null, motion: null, opacity: null };
+const $ = (id) => document.getElementById(id);
+const video = $('video');
+
+function el(tag, attrs, children) {
+  const node = document.createElement(tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => {
+    if (k === 'onclick') node.addEventListener('click', v);
+    else if (k === 'text') node.textContent = v;
+    else node.setAttribute(k, v);
+  });
+  (children || []).forEach((c) => node.appendChild(c));
+  return node;
+}
+
+/* ---------- 載入資料庫 ---------- */
+function loadLibrary() {
+  $('lib-status').hidden = false;
+  $('lib-status-text').textContent = '載入中…';
+  $('lib-retry').hidden = true;
+  Library.load(LIB).then((l) => {
+    lib = l;
+    $('lib-status').hidden = true;
+    renderBodyPage();
+  }).catch(() => {
+    $('lib-status-text').textContent = '資料載入失敗，請檢查網路後重試';
+    $('lib-retry').hidden = false;
+  });
+}
+$('lib-retry').addEventListener('click', loadLibrary);
+
+/* ---------- 第一頁 ---------- */
+function fillSelect(select, items, placeholder, current) {
+  select.innerHTML = '';
+  select.appendChild(el('option', { value: '', disabled: '', text: placeholder }));
+  items.forEach((it) => {
+    const opt = el('option', { value: it.id, text: it.label });
+    if (it.disabled) opt.disabled = true;
+    select.appendChild(opt);
+  });
+  select.value = current || '';
+}
+function renderBodyPage() {
+  if (!lib) { $('go-try').disabled = true; return; }
+  Object.assign(state, lib.normalize(state));          // 清掉已經不可選的欄位（先選的優先）
+  const box = $('genders');
+  box.innerHTML = '';
+  lib.genders(state).forEach((g) => {
+    const btn = el('button', {
+      type: 'button', class: 'choice', 'aria-pressed': String(state.gender === g.id), text: g.label,
+      onclick: () => { state.gender = state.gender === g.id ? null : g.id; renderBodyPage(); }
+    });
+    if (g.disabled) btn.disabled = true;
+    box.appendChild(btn);
+  });
+  fillSelect($('height'), lib.heights(state), '請選擇身高', state.height);
+  fillSelect($('weight'), lib.weights(state), '請選擇體重', state.weight);
+  $('height').classList.toggle('filled', !!state.height);
+  $('weight').classList.toggle('filled', !!state.weight);
+  $('go-try').disabled = !(state.gender && state.height && state.weight);
+}
+$('height').addEventListener('change', (e) => { state.height = e.target.value || null; renderBodyPage(); });
+$('weight').addEventListener('change', (e) => { state.weight = e.target.value || null; renderBodyPage(); });
+$('go-try').addEventListener('click', () => showPage('try'));
+document.querySelectorAll('[data-go-body]').forEach((b) => b.addEventListener('click', () => showPage('body')));
+
+function showPage(name) {
+  $('body-page').hidden = name !== 'body';
+  $('try-page').hidden = name !== 'try';
+  if (name === 'try') {
+    Object.assign(state, lib.normalize(state));
+    const short = (kind) => lib.labelOf(kind, state[kind]).replace(' cm', 'cm').replace(' kg', 'kg');
+    $('summary').textContent = `${short('gender')}・${short('height')}・${short('weight')}`;
+    renderTryPage();
+    loadVideo();
+  } else {
+    renderBodyPage();
+  }
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 第二頁 ---------- */
+// 目前的動作如果在這組衣服下沒有影片，就換成第一個有影片的動作。
+function fixMotion() {
+  const cur = state.motion && lib.motions(state).find((m) => m.id === state.motion);
+  if (!cur || cur.disabled) state.motion = lib.firstMotion(state);
+}
+// 目前的不透明度如果在這組條件下沒有影片，就回到不透明。
+function fixOpacity() {
+  if (!state.opacity) return;
+  const cur = lib.opacities(state).find((o) => o.id === state.opacity);
+  if (!cur || cur.disabled) state.opacity = null;
+}
+function renderOpacity() {
+  const items = lib.opacities(state);
+  $('opacity-section').hidden = items.length === 0;        // 沒有任何透明影片 = 不顯示拉桿
+  if (!items.length) return;
+  const curId = state.opacity || '1';
+  const idx = Math.max(0, items.findIndex((o) => o.id === curId));
+  const slider = $('opacity');
+  slider.max = String(items.length - 1);
+  slider.value = String(idx);
+  slider.setAttribute('aria-valuetext', items[idx].label);
+  $('opacity-val').textContent = items[idx].label;
+  const ticks = $('opacity-ticks');
+  ticks.innerHTML = '';
+  items.forEach((o, i) => {
+    const b = el('button', { type: 'button', 'aria-pressed': String(i === idx), text: o.label, onclick: () => setOpacityIndex(i) });
+    if (o.disabled) b.disabled = true;
+    ticks.appendChild(b);
+  });
+}
+// 拉到沒有影片的刻度時，吸附到最近有影片的刻度。
+function nearestEnabled(items, i) {
+  for (let d = 0; d < items.length; d++) {
+    for (const j of [i - d, i + d]) if (items[j] && !items[j].disabled) return j;
+  }
+  return -1;
+}
+function setOpacityIndex(i) {
+  const items = lib.opacities(state);
+  const j = nearestEnabled(items, i);
+  if (j < 0) return;
+  const id = items[j].id === '1' ? null : items[j].id;
+  if (id === state.opacity) { renderOpacity(); return; }
+  state.opacity = id;
+  renderTryPage();
+  loadVideo();
+}
+$('opacity').addEventListener('input', (e) => {            // 拖曳中：只更新數字與吸附位置，放開才換影片
+  const items = lib.opacities(state);
+  const j = nearestEnabled(items, Number(e.target.value));
+  if (j >= 0) { e.target.value = String(j); $('opacity-val').textContent = items[j].label; }
+});
+$('opacity').addEventListener('change', (e) => setOpacityIndex(Number(e.target.value)));
+
+function renderTryPage() {
+  fixMotion();
+  fixOpacity();
+  renderOpacity();
+  const motions = $('motions');
+  motions.innerHTML = '';
+  lib.motions(state).forEach((m) => {
+    const btn = el('button', { type: 'button', class: 'pill', 'aria-pressed': String(state.motion === m.id), text: m.label, onclick: () => pickMotion(m.id) });
+    if (m.disabled) btn.disabled = true;
+    motions.appendChild(btn);
+  });
+  const uppers = lib.uppers(state), lowers = lib.lowers(state);
+  renderGarments($('uppers'), uppers, 'upper');
+  renderGarments($('lowers'), lowers, 'lower');
+  $('upper-count').textContent = uppers.length + ' 件';
+  $('lower-count').textContent = lowers.length + ' 件';
+}
+function renderGarments(box, items, slot) {
+  box.innerHTML = '';
+  items.forEach((g) => {
+    const img = el('img', { src: g.thumb, alt: '' });
+    img.addEventListener('error', () => { img.style.visibility = 'hidden'; });
+    const btn = el('button', {
+      type: 'button', class: 'card', 'aria-pressed': String(state[slot] === g.id), onclick: () => pickGarment(slot, g.id)
+    }, [el('div', { class: 'thumb' }, [img]), el('div', { class: 'name', text: g.label })]);
+    if (g.disabled) btn.disabled = true;
+    box.appendChild(btn);
+  });
+}
+// 再點一次已選的衣服就取消選擇（這樣被另一件限制住時可以解開）。
+function pickGarment(slot, id) {
+  state[slot] = state[slot] === id ? null : id;
+  renderTryPage();
+  loadVideo();
+}
+function pickMotion(id) {
+  if (state.motion === id) return;
+  state.motion = id;
+  renderTryPage();
+  loadVideo();
+}
+
+function setStage(mode) {
+  $('state-empty').hidden = mode !== 'empty';
+  $('state-loading').hidden = mode !== 'loading';
+  $('state-error').hidden = mode !== 'error';
+  $('caption').hidden = mode !== 'playing';
+  video.classList.toggle('hide', mode !== 'playing');
+}
+function loadVideo() {
+  if (!state.upper || !state.lower) {
+    $('empty-text').textContent = !state.upper && !state.lower ? '選一件上身和一件下身' : !state.lower ? '再選一件下身' : '再選一件上身';
+    video.removeAttribute('src');
+    setStage('empty');
+    return;
+  }
+  const url = lib.videoUrl(state);
+  if (!url) { video.removeAttribute('src'); setStage('error'); return; }
+  const opText = state.opacity ? `・不透明度 ${lib.labelOf('opacity', state.opacity)}` : '';
+  $('caption-text').textContent = `${lib.labelOf('upper', state.upper)} ＋ ${lib.labelOf('lower', state.lower)}・${lib.labelOf('motion', state.motion)}${opText}`;
+  setStage('loading');
+  video.src = url;
+  video.muted = true;
+  video.play().catch(() => {});
+}
+video.addEventListener('loadeddata', () => setStage('playing'));
+video.addEventListener('error', () => { if (video.getAttribute('src')) setStage('error'); });
+$('retry').addEventListener('click', loadVideo);
+
+loadLibrary();
+</script>
+</body>
+</html>

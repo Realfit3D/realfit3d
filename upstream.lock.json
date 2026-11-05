@@ -5,7 +5,7 @@
       "name": "Gaussian-Garments",
       "path": "upstream/Gaussian-Garments",
       "repository": "https://github.com/Realfit3D/Gaussian-Garments.git",
-      "commit": "795a0947fae6db0ffba296a90a4e60fad9b84675",
+      "commit": "cbfd9c33463b57af10d1192e5d009f733c3fbf8f",
       "upstream_repository": "https://github.com/eth-ait/Gaussian-Garments.git",
       "upstream_baseline": "ceb66fc36598da05b3b3391f4562cdc54d2a2ed2",
       "role": "Team-maintained GG fork: preview renderers, opacity training/control, environment roots, trajectory guards"

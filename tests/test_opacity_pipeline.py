@@ -19,13 +19,14 @@ class OpacityPipelineTests(unittest.TestCase):
         scope = dict(Path=Path, RENDER_ENV_EXTRA={}, run=lambda command, **kwargs: calls.append(command))
         exec(compile(ast.Module(body=selected, type_ignores=[]), "render_commands", "exec"), scope)
         args = SimpleNamespace(gaugar_python="python", gaugar_root=Path("/gg"), bake_samples=4,
-                               opacity_mode="v3", opacity_scale=.3,
+                               opacity_mode="v3", opacity_scale=.3, opacity_garments=['upper'],
                                v3_controller=["lower=/assets/lower/controller.pt", "upper=/assets/upper/controller.pt"])
         scope["render"](args, Path("/trajectory.pkl"), Path("/frames"))
         scope["render_turntable"](args, Path("/trajectory.pkl"), 4, Path("/turntable"), 12)
         for command in calls:
             index = command.index("--opacity-mode")
             self.assertEqual(command[index:], ["--opacity-mode", "v3", "--opacity-scale", "0.3",
+                             "--opacity-garments", "upper",
                              "--v3-controller", args.v3_controller[0], "--v3-controller", args.v3_controller[1]])
 
     def test_offline_opacity_uses_gg_and_specific_controller_output(self):
