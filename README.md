@@ -12,11 +12,16 @@ Detailed GG changes: [English](https://github.com/Realfit3D/Gaussian-Garments/bl
 ## Status
 
 The local web interface, CLI, and runtime adapters are implemented.
-**End-to-end GPU try-on and training validation are pending.**
+The generalized repair/contact integration has CPU tests; its full GPU training
+and rollout paths still require a configured-runtime smoke test.
 Opacity controls are connected to Web, CLI, and both GG rendering entries.
 V3 uses a separate controller checkpoint for each garment.
 Precomputed video playback is available at `/library/`; batch generation and
 opt-in garment initialization repair share the existing runtime workers.
+Stage 1.1 recipes, repaired-asset installation, pose-preserving Stage 4 conversion,
+and optional contact-corrected outfit rollout are integrated into these paths.
+Reproduction guide: [English](docs/REPRODUCING_REPAIRED_GARMENTS.md) |
+[繁體中文](docs/REPRODUCING_REPAIRED_GARMENTS.zh-TW.md).
 
 ## Quick Start
 
@@ -53,6 +58,8 @@ Do not execute upstream installation scripts without reviewing them.
 | Web configuration, API, and deployment limits | [Web integration](docs/WEB.md) (Traditional Chinese) |
 | Opacity training, asset configuration, and rendering | [English](docs/OPACITY.md) / [Traditional Chinese](docs/OPACITY.zh-TW.md) |
 | Offline stages, CLI, prerequisites, and acceptance gaps | [Integration status](docs/INTEGRATION_STATUS.md) (Traditional Chinese) |
+| Calibrated Stage 1 camera projection | [English](docs/STAGE1_CAMERA.md) / [Traditional Chinese](docs/STAGE1_CAMERA.zh-TW.md) |
+| Registered sequence to simulation training | [English](docs/TRAINING_CONVERSION.md) / [Traditional Chinese](docs/TRAINING_CONVERSION.zh-TW.md) |
 | Dependency sources and pinned versions | [Upstream dependencies](docs/UPSTREAM.md), [version lock](upstream.lock.json) |
 | Fork/submodule development workflow | [Development](docs/DEVELOPMENT.md) (Traditional Chinese) |
 

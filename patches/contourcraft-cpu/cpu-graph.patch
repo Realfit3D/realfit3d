@@ -1,0 +1,62 @@
+--- a/utils/icontour.py
++++ b/utils/icontour.py
+@@ -1,7 +1,11 @@
+ from collections import defaultdict
+ from time import time
+-import cudf
+-import cugraph
++import os
++if os.environ.get('REALFIT_CC_GRAPH_BACKEND', 'cuda') == 'cpu':
++    from utils.connected_components_cpu import edge_components
++else:
++    import cudf
++    import cugraph
+ import numpy as np
+ import torch
+ import cccollisions
+@@ -645,12 +649,16 @@
+     edges_noloop = full_graph_edges[~torch.isin(full_graph_edges, loop_node_ids).any(dim=-1)]
+     edges_nosl = edges_noloop[(edges_noloop < sli_offset).all(dim=-1)]
+ 
+-    edges_df = make_edge_df(edges_nosl)
+-    graph_contour = cugraph.Graph()
+-    graph_contour.from_cudf_edgelist(edges_df, source='src', destination='dst')
+-
+-    components = cugraph.connected_components(graph_contour)
+-    components = torch.LongTensor(components.to_numpy()).to(full_graph_edges.device)
++    if os.environ.get('REALFIT_CC_GRAPH_BACKEND', 'cuda') == 'cpu':
++        components = torch.from_numpy(edge_components(edges_nosl.detach().cpu().numpy())).to(full_graph_edges.device)
++    else:
++        edges_df = make_edge_df(edges_nosl)
++        graph_contour = cugraph.Graph()
++        graph_contour.from_cudf_edgelist(edges_df, source='src', destination='dst')
++        components = cugraph.connected_components(graph_contour)
++        components = torch.LongTensor(components.to_numpy()).to(full_graph_edges.device)
++    if components.numel() == 0:
++        return torch.unique(torch.sort(full_graph_edges, dim=-1).values, dim=0), {}, {}, components_offset
+ 
+ 
+     clabels_unique, clables, counts = torch.unique(components[:, 1], return_inverse=True, return_counts=True)
+--- /dev/null
++++ b/utils/connected_components_cpu.py
+@@ -0,0 +1,20 @@
++"""CPU connected-component labels for edge-list graphs on Pascal hosts."""
++import numpy as np
++from scipy.sparse import coo_matrix
++from scipy.sparse.csgraph import connected_components
++
++
++def edge_components(edges):
++    """Return (vertex ID, component ID) pairs for vertices present in edges."""
++    edges = np.asarray(edges, dtype=np.int64)
++    if edges.ndim != 2 or edges.shape[1] != 2:
++        raise ValueError('Expected an N x 2 integer edge array')
++    if not len(edges):
++        return np.empty((0, 2), dtype=np.int64)
++    vertices, inverse = np.unique(edges, return_inverse=True)
++    remapped = inverse.reshape(-1, 2)
++    graph = coo_matrix((np.ones(len(edges), dtype=np.uint8),
++                        (remapped[:, 0], remapped[:, 1])),
++                       shape=(len(vertices), len(vertices))).tocsr()
++    _, labels = connected_components(graph, directed=False)
++    return np.column_stack((vertices, labels)).astype(np.int64)

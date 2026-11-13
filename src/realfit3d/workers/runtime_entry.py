@@ -14,6 +14,8 @@ def configure(kind, root):
         defaults.update(data_root=data, aux_data=str(Path(data) / 'aux_data'),
                         project_dir=str(root), experiment_root=str(Path(data) / 'experiments'),
                         CMU_root=os.environ['REALFIT3D_CMU_ROOT'])
+        from realfit3d.workers.contourcraft.registered_sequence import install
+        install()
     elif kind == 'actors':
         defaults = importlib.import_module('defaults').DEFAULTS
         for key, environment in [('data_root', 'REALFIT3D_GG_DATA_ROOT'),

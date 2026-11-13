@@ -7,8 +7,8 @@
 | Web → API → CC worker → GG renderer | 共用輸入驗證、命令建構、獨立 Python 環境、資料路徑設定及透明參數 | CPU／假 runtime／瀏覽器測試通過；完整人體擬合及模擬流程尚待 GPU 驗收 |
 | GG fork | lean、turntable、環境根目錄、trajectory 檢查及透明控制 | Actor02 上下衣真實 GPU 渲染通過，包含 V3 端點與兩個入口比對 |
 | CC／ActorsHQ | 固定官方 commit；子程序 DEFAULTS 配置 | 不是遠端 dirty checkout 的完整重現 |
-| 離線入口 | prepare、initialize、reconstruct、register-template、register-sequence、appearance、opacity、convert、dynamics | V3 已支援不含原始影像的相機配置，Actor02 上下衣通過 CPU 相機檢查；完整重訓尚未執行 |
-| 品質工具 | 8 個 mask／相機／mesh／資料切分工具 | 算法沿用 backend；TSDF 白名單需手動接入，門檻待資料集驗證 |
+| 離線入口 | prepare、initialize、reconstruct、repair、register-template、register-sequence、appearance、opacity、convert、dynamics | V3 已支援不含原始影像的相機配置，Actor02 上下衣通過 CPU 相機檢查；完整重訓尚未執行 |
+| 品質工具 | mask／相機／mesh／資料切分及 Stage 1.1 修補／安裝工具 | 算法沿用 backend；TSDF 白名單需手動接入，門檻待資料集驗證 |
 | 資產檢查 | 實際消費路徑、可選 SHA256、基本 trajectory 檢查 | 拓撲、人體座標與 checkpoint 相容性需另外核對 |
 | 預計算影片庫 | 批次工作單、依賴指紋快取、可選初始化修復、影片索引與選播 | CPU、幾何與桌面／手機播放測試通過；新修復／V3 組合待 GPU 資產驗收 |
 
@@ -25,16 +25,16 @@ python -m realfit3d.cli --config configs/paths.local.json offline reconstruct --
 
 預設只輸出 JSON 計畫與缺少的路徑，不執行。確認輸入、輸出和成本後，加 `--execute` 執行該階段。執行紀錄與 log 放於 `output_root/offline_jobs/<id>/`。訓練依上游自身規則寫 checkpoint，不自動替既有實驗改名或覆寫設定。
 
-S1 後先完成 UV seams／unwrap，得到 `stage1/template_uv.obj`，
-再依序執行 register-template、register-sequence、appearance。
-appearance 沿用官方程式內設定，實際執行 5 epochs；
-argparse 的預設值 3 會被程式覆蓋。
+S1 後可依[修補重現指南](REPRODUCING_REPAIRED_GARMENTS.zh-TW.md)產生與審核 Stage 1.1 mesh／UV，
+安裝到新資產，再依序執行 register-template、register-sequence、appearance。
+appearance 使用 `--epochs`（預設 5），每個 epoch 保存具名與 canonical checkpoint。
+Stage 2/3 的網路與損失維持既有實作；本輪整合沒有新增邊界保持損失。
 
 需要 V3 的衣物在 appearance 完成後執行可選的 `opacity` 階段。
 已有 controller 的衣物直接匯入，無須重訓。流程與 catalog 設定見
 [透明度指南](OPACITY.zh-TW.md)。
 
-`convert` 呼叫官方 GauGarConverter 產生 Stage4、garment dictionary 與 CC finetune YAML；若已有 Stage4 或同名 YAML，拒絕覆寫。官方 converter 會在 CC 的 configs/finetune 寫入新 YAML，因此執行後需檢查 git status、訓練設定、pin 與資料切分。`dynamics` 執行對應 CC 訓練。Web 的恢復／relax 匯入入口則準備線上試衣資產。
+`convert` 透過共用 worker 擴充官方 GauGarConverter 產生 Stage4、garment dictionary 與 CC finetune YAML；若已有 Stage4 或同名 YAML，拒絕覆寫。官方 converter 會在 CC 的 configs/finetune 寫入新 YAML，因此執行後需檢查 git status、訓練設定、pin 與資料切分。`dynamics` 執行對應 CC 訓練。Web 的恢復／relax 匯入入口則準備線上試衣資產。
 
 Web 與 CLI 試衣使用同一個命令建構器：
 
@@ -89,3 +89,5 @@ experimental_smplx_pose_transfer 保留為實驗分支，其 ICP fallback 行為
 選一組既有成功結果的衣物和動作，在新工作目錄執行同組舊／新命令。
 驗收項目為 garment_names 順序、頂點／面／UV、frame 數、PNG／MP4、
 耗時與峰值記憶體；每次結果記錄 checkpoint 雜湊、完整命令及差異。
+
+Stage 1.1、保留配準姿勢的 Stage 4 loader 與可選接觸 rollout，詳見[重現指南](REPRODUCING_REPAIRED_GARMENTS.zh-TW.md)。整合後 GPU 訓練／推論尚需獨立 smoke 驗證。

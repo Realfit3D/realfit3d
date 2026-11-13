@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-13",
+  "main_tests": {
+    "discovered": 84,
+    "python313_passed": 80,
+    "python313_skipped": 4,
+    "python310_geometry_passed": 83,
+    "python310_skipped": 1,
+    "combined_unique_passed": 84
+  },
+  "gg_tests": {
+    "passed": 28
+  },
+  "existing_geometry_tests": {
+    "passed": 19,
+    "skipped": 3
+  },
+  "library_js_tests": {
+    "passed": 1
+  },
+  "video_encoding": {
+    "status": "passed",
+    "frames": 4,
+    "fps": 25.0,
+    "size": [
+      32,
+      32
+    ],
+    "bytes": 1672
+  },
+  "actor05_source156": {
+    "source_sha256": "cd48c122352928cbb486f076f2bbdc603be36e7e0191d7e636a06c7eb9d4c22e",
+    "recipe_sha256": "2424bcecbe1c3332c0df2838931ed0fe82eab423208095e9fdc98b1b18b738e7",
+    "geometry": {
+      "vertices": 8533,
+      "faces": 16786,
+      "openings": 4,
+      "simple_openings": true,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "nonmanifold_vertices": 0,
+      "self_intersections": 0,
+      "degenerate_faces": 0,
+      "triangle_quality_p01": 0.606646140801214,
+      "bounds_m": [
+        [
+          -0.34345128502365513,
+          0.986794501543045,
+          -0.15391781626371626
+        ],
+        [
+          0.373165998682026,
+          1.6100346582416218,
+          0.1469836556773259
+        ]
+      ],
+      "dimensions_m": [
+        0.7166172837056811,
+        0.6232401566985768,
+        0.30090147194104216
+      ],
+      "opening_perimeters_m": [
+        1.0507032805609562,
+        0.5188096322169565,
+        0.35574712450698054,
+        0.3519319558229893
+      ]
+    },
+    "dimension_change_m": [
+      0.00159829605004147,
+      -0.021119849156983506,
+      -0.0015125280932901108
+    ],
+    "contact": {
+      "normal_inside_gt2mm": 1693,
+      "minimum_normal_distance_m": -0.031410573172707235
+    },
+    "uv_min_double_area": 3.2990722047543386e-06,
+    "status": "geometry_and_uv_passed_contact_not_accepted"
+  },
+  "gpu_training_and_rollout": "not run",
+  "actor08_and_actor06_07_capture_regressions": "pending input-specific runs"
+}

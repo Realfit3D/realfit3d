@@ -1,0 +1,19 @@
+{
+  "training_frame_rate": 25,
+  "validation_frames": 10,
+  "training_updates": 1000,
+  "training_rollout_steps": 8,
+  "training_split_repeat": 100,
+  "training_checkpoint_every": 100,
+  "contact_correction": {
+    "schema_version": 1,
+    "relaxation_steps": 30,
+    "lower_impulse_passes": 2,
+    "max_waist_growth_ratio": 1.06,
+    "projector": {
+      "clearance": 0.003,
+      "minimum_clearance": 0.002,
+      "max_displacement": 0.035
+    }
+  }
+}

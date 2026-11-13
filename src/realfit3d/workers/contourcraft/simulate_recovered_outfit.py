@@ -62,7 +62,22 @@ def main():
              "Measured cost for a 2-garment outfit: this call took ~62x longer "
              "per call than for a single garment (775ms vs 12.5ms), ~25-28%% of "
              "total simulate wall time.")
+    parser.add_argument('--body-model-root', type=Path)
+    parser.add_argument('--contact-config-json', help='Bounded contact settings; two garments in lower,upper order')
     args = parser.parse_args()
+    contact = None
+    if args.contact_config_json:
+        import json
+        from realfit3d.contact import contact_config
+        contact = contact_config(json.loads(args.contact_config_json))
+        if len(args.garment_names) != 2 or args.sequence_loader != 'cmu_npz_smplx':
+            parser.error('Contact rollout requires two garments and cmu_npz_smplx')
+        import random
+        import numpy as np
+        import torch
+        random.seed(contact['seed']); np.random.seed(contact['seed'])
+        torch.manual_seed(contact['seed']); torch.cuda.manual_seed_all(contact['seed'])
+
 
     if args.output_trajectory.exists():
         raise FileExistsError(f"Refusing to overwrite: {args.output_trajectory}")
@@ -119,16 +134,22 @@ def main():
     # addressed relative to --garment-dicts-dir -- this is the format
     # utils.untanglement.save_new_garment_dicts documents ("garment_name for simulation").
     garment_name = ",".join(f"{args.outfit_name}/{n}" for n in args.garment_names)
+    loader_options = {'body_model_root': str(args.body_model_root)} if args.body_model_root else {}
     dataloader = create_postcvpr_one_sequence_dataloader(
         args.sequence, garment_name, sequence_loader=args.sequence_loader,
         obstacle_dict_file=None, gender=args.gender,
-        garment_dicts_dir=args.garment_dicts_dir)
+        garment_dicts_dir=args.garment_dicts_dir, **loader_options)
 
     sequence = next(iter(dataloader))
     sequence = move2device(sequence, "cuda:0")
 
     print(f"Running rollout for {args.n_steps} steps ({', '.join(args.garment_names)})...")
-    trajectories_dict = runner.valid_rollout(sequence, bare=True, n_steps=args.n_steps)
+    if contact is None:
+        trajectories_dict = runner.valid_rollout(sequence, bare=True, n_steps=args.n_steps)
+    else:
+        from contact_rollout import rollout
+        trajectories_dict = rollout(runner, sequence, args.n_steps, args.garment_names,
+                                    args.output_trajectory.with_suffix('.contact'), contact)
     print("Rollout done.")
 
     # Appearance side: plain names, in the same order the dataloader concatenated

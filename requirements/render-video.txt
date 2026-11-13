@@ -1,0 +1,3 @@
+# Install in the private GG rendering environment; top-level ImageSequenceClip API.
+moviepy==2.2.1
+imageio-ffmpeg==0.6.0

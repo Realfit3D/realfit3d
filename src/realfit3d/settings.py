@@ -40,6 +40,13 @@ def load_settings(filename=None):
         for key in ('reference_dict', 'profile'):
             if cfg.get(key):
                 cfg[key] = str((base / Path(cfg[key]).expanduser()).resolve())
+    for cfg in settings.get('template_repairs', {}).values():
+        for key in ('source', 'recipe', 'output', 'body', 'reference', 'body_model'):
+            if cfg.get(key):
+                cfg[key] = str((base / Path(cfg[key]).expanduser()).resolve())
+    if settings.get('contact_correction') is not None:
+        from realfit3d.contact import contact_config
+        settings['contact_correction'] = contact_config(settings['contact_correction'])
     settings['v3_controllers'] = {
         name: str((base / Path(path).expanduser()).resolve())
         for name, path in settings.get('v3_controllers', {}).items()
@@ -49,6 +56,7 @@ def load_settings(filename=None):
 
 def runtime_environment(settings, python=None):
     env = os.environ.copy()
+    env['PYTHONPATH'] = str(Path(__file__).resolve().parents[1]) + os.pathsep + env.get('PYTHONPATH', '')
     for key, name in ENVIRONMENT_PATHS.items():
         if settings.get(key):
             path = Path(settings[key]).expanduser()

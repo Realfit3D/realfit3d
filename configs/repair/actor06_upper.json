@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "name": "actor06_upper",
+  "garment_type": "upper",
+  "expected_openings": 4,
+  "coordinate_system": "Source capture, Y-up, metres; do not apply to a differently aligned mesh",
+  "operations": [
+    {
+      "kind": "body_torso_prior",
+      "subdivisions": 2,
+      "arm_joint_start": 16,
+      "arm_weight_max": 0.06,
+      "hem_y_m": 1.07,
+      "center_x_m": 0.015,
+      "neck_y_m": 1.285,
+      "front_z_start_m": -0.1,
+      "front_z_width_m": 0.12,
+      "front_neck_raise_m": 0.06,
+      "neck_slope": 1.5,
+      "clearance_m": 0.003,
+      "target_faces": 16000
+    },
+    {
+      "kind": "clean",
+      "remove_nonmanifold_edges": true,
+      "split_nonmanifold_vertices": true
+    },
+    {
+      "kind": "fill_small_holes",
+      "max_perimeter_m": 0.22
+    },
+    {
+      "kind": "smooth_openings",
+      "iterations": 6,
+      "max_displacement_m": 0.008
+    },
+    {
+      "kind": "body_clearance",
+      "iterations": 9,
+      "clearance_m": 0.002,
+      "step_m": 0.004,
+      "max_displacement_m": 0.025,
+      "line_search": true
+    },
+    {
+      "kind": "local_intersections",
+      "rounds": 3,
+      "max_displacement_m": 0.002,
+      "lock_openings": false
+    }
+  ],
+  "interpretation": "Body-supported sleeveless topology prior in occluded regions; not recovered unseen cloth."
+}

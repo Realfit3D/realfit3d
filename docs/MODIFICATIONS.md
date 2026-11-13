@@ -106,3 +106,15 @@
 | 固定選項快取 | RealFit3D 主專案 | 批次依賴指紋、身形／衣物快取與影片重用已實作；鄰近身形插值尚未實作 |
 
 修改紀錄欄位：來源 repo／檔案／commit、修改目的、行為變更、測試與已知限制。
+
+
+## 2026-11-13 — Repaired garment workflow
+
+Stage 1.1 capture presets and mesh/UV checks now share a parameterized repair
+module. New asset installation validates hashes and keeps calibration and color
+initialization with the repaired template. Stage 4 conversion validates frame
+and topology correspondence, preserves captured poses, pins lower garments before
+relaxation, and generates matching registration/physics training splits.
+Optional contact correction is connected to the existing try-on and video workers.
+Sources, validation and remaining GPU acceptance are recorded in
+[the integration note](maintainer/REPAIR_INTEGRATION_20261113.md).

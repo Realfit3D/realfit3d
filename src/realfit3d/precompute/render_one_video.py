@@ -97,6 +97,8 @@ def _pipeline_cmd(paths, catalog, job, run_dir_name, precomputed_betas):
                     "或在 runtime configuration 的 v3_controllers 指定路徑。"
                 )
             cmd += ["--v3-controller", f"{garment}={controller.resolve()}"]
+    from realfit3d.contact import arguments as contact_arguments
+    cmd.extend(contact_arguments(paths))
     repairs = repair_config(paths, job.garments, job.gender)
     if repairs:
         cmd += ['--garment-repairs-json', json.dumps(repairs)]

@@ -1,0 +1,19 @@
+{
+  "source_snapshot_sha256": {
+    "actor05_validation_108_20261110/stage11_20261111/refine_template.py": "f161dc326cae2e56fe39f9f48944ac6f66c9f046c8f1fefa7576a99fe5fb7b35",
+    "actor05_validation_108_20261110/stage11_20261111/rebuild_hem.py": "a7afea7657ba8486e7494b021ec353b4f78406bb545ab82f81462fd9210bdadf",
+    "actor05_lower_20261111/repair_lower_template.py": "f71a061ec11b8134943697a8dbacc5c075f661e781924b706521bfd51d7dbc96",
+    "actor05_lower_20261111/repair_actor08_templates.py": "a70f9e99ca87fd7f79f9bd2a754544010cff13d9f2c5f403b7c5b3e9dc77fb41",
+    "actor05_lower_20261111/remesh_lower_uv.py": "f89f91ed1dd7a95a2699314333ab33b4082ed20651cc40703117d1ecbeb1f947",
+    "lin/actor06_actor07_20261112/repair_templates.py": "196d504e3d10bb1c9820b0d1d3b3519b2c0c443c4c837641eef42686d2101ce6",
+    "lin/actor06_upper_repair_20261113/repair_supported.py": "1f1611d6cb089b00e3f547e39d80c731a1ad698bd53500a91bec84a15c537a04",
+    "lin/actor06_upper_repair_20261113/body_supported_v8.py": "a7ae8167be305d28382a0196f28fe45a6a20f718c65b2f6481e17a8586fe67e4",
+    "lin/actor06_upper_repair_20261113/finalize_supported_v10.py": "bcb64bf822921c054780c80b40b69a554344403201bc4273c17f7b2613d774be",
+    "lin/actor05_library_batch_20261112/run_motion.py": "1e9cb3d0bff099c6123ef0dff2a0c9f802113eb8dc4aa0f2295e39330baefad2",
+    "lin/actor05_library_batch_20261112/contact_projection.py": "6d6c964d729d63b515ba87d77474bf1310b46b0ac807c725a0a7fd5a4d62abe1",
+    "actor05_validation_108_20261110/hem58_fullflow_20261111/stage4_config.py": "44f9a3199f30e11b8a144157a4ec7f6c7cb110c17c255a682493c6bff95c9761"
+  },
+  "base_main_commit": "fb289d1481a9274f32533a45b706a74d29b16a94",
+  "contourcraft_commit": "d606432c2f7e96b05664e6a4ffb9d1cb98705baf",
+  "status": "Parameterized integration; not a byte-identical replay of all experimental candidates"
+}

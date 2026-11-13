@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "name": "actor08_lower",
+  "garment_type": "lower",
+  "expected_openings": 3,
+  "coordinate_system": "Source capture, Y-up, metres; do not apply to a differently aligned mesh",
+  "operations": [
+    {
+      "kind": "crop",
+      "height_m": 0.6,
+      "direction": 1
+    },
+    {
+      "kind": "crop",
+      "height_m": 0.875,
+      "direction": -1
+    },
+    {
+      "kind": "clean",
+      "target_faces": 13000,
+      "largest_component": true,
+      "taubin_iterations": 8,
+      "remove_nonmanifold_edges": true,
+      "split_nonmanifold_vertices": true
+    },
+    {
+      "kind": "fill_small_holes",
+      "max_perimeter_m": 0.12
+    },
+    {
+      "kind": "extend_bands",
+      "bands": [
+        {
+          "min_y_m": 0.8,
+          "target_y_m": 0.97
+        },
+        {
+          "max_y_m": 0.8,
+          "target_y_m": 0.565
+        }
+      ],
+      "other_opening_iterations": 8
+    },
+    {
+      "kind": "remesh",
+      "face_selection": "((y0 < 0.625) && (y1 < 0.625) && (y2 < 0.625)) || ((y0 > 0.850) && (y1 > 0.850) && (y2 > 0.850))"
+    },
+    {
+      "kind": "merge",
+      "distance_m": 0.0005
+    },
+    {
+      "kind": "body_clearance",
+      "iterations": 4,
+      "clearance_m": 0.004,
+      "step_m": 0.05,
+      "max_displacement_m": 0.05,
+      "line_search": true
+    },
+    {
+      "kind": "local_intersections",
+      "rounds": 6,
+      "neighbor_rings": 3,
+      "iterations": 12,
+      "max_displacement_m": 0.03,
+      "lock_openings": false
+    },
+    {
+      "kind": "clean",
+      "split_nonmanifold_vertices": true
+    }
+  ]
+}

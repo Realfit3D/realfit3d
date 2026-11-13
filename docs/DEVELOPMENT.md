@@ -44,6 +44,9 @@ git commit -m "Pin GG to the tested RealFit3D revision"
 先推送 GG commit，再發布主專案引用。需要 review 的變更先在 fork 開 PR，
 合併後更新主專案。GG 的內部變更由 fork commit 管理，安裝時無需另套 patch。
 
+Stage 1 的相機修正位於 ActorsHQ/GS2Mesh，不屬於 GG fork。
+此選用修正以固定版本 patch 安裝，見[標定相機設定](STAGE1_CAMERA.zh-TW.md)。
+
 ## 更新與檢查
 
 其他人取得新版主 repo 後，先用 `git submodule sync --recursive` 同步來源網址，

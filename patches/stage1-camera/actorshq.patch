@@ -1,0 +1,21 @@
+diff --git a/mesh_reconstruction.py b/mesh_reconstruction.py
+index d47cb76..6cf1e6d 100644
+--- a/mesh_reconstruction.py
++++ b/mesh_reconstruction.py
+@@ -138,7 +138,8 @@ def run_single(args):
+         try:
+             os.chdir(os.path.join(base_dir, 'third_party', 'gaussian-splatting'))
+             iterations_str = ' '.join([str(iteration) for iteration in args.GS_save_test_iterations])
+-            os.system(f"python train.py -s {colmap_dir} --port {args.GS_port} --model_path {os.path.join(base_dir, 'splatting_output', strings['splatting'], args.colmap_name)} --iterations {args.GS_iterations} --test_iterations {iterations_str} --save_iterations {iterations_str}{' --white_background' if args.GS_white_background else ''}")
++            projection_flag = ' --calibrated_principal_point' if args.GS_calibrated_principal_point else ''
++            os.system(f"python train.py -s {colmap_dir} --port {args.GS_port} --model_path {os.path.join(base_dir, 'splatting_output', strings['splatting'], args.colmap_name)} --iterations {args.GS_iterations} --test_iterations {iterations_str} --save_iterations {iterations_str}{' --white_background' if args.GS_white_background else ''}{projection_flag}")
+             os.chdir(base_dir)
+         except:
+             os.chdir(base_dir)
+@@ -290,4 +291,4 @@ if __name__ == "__main__":
+     args = parser.parse_args()
+     args.colmap_name = f"{args.subject}_{args.sequence}"
+     args.TSDF_use_mask = True
+-    run_single(args)
+\ No newline at end of file
++    run_single(args)

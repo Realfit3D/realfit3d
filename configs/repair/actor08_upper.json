@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "name": "actor08_upper",
+  "garment_type": "upper",
+  "expected_openings": 4,
+  "coordinate_system": "Source capture, Y-up, metres; do not apply to a differently aligned mesh",
+  "operations": [
+    {
+      "kind": "crop",
+      "height_m": 0.95,
+      "direction": 1
+    },
+    {
+      "kind": "clean",
+      "target_faces": 13000,
+      "largest_component": true,
+      "taubin_iterations": 8,
+      "remove_nonmanifold_edges": true,
+      "split_nonmanifold_vertices": true
+    },
+    {
+      "kind": "fill_small_holes",
+      "max_perimeter_m": 0.12,
+      "remove_puncture_band_above_y": 1.1
+    },
+    {
+      "kind": "extend_bands",
+      "bands": [
+        {
+          "max_y_m": 0.96,
+          "target_y_m": 0.895
+        }
+      ],
+      "other_opening_iterations": 8
+    },
+    {
+      "kind": "remesh",
+      "face_selection": "(y0 < 0.975) && (y1 < 0.975) && (y2 < 0.975)"
+    },
+    {
+      "kind": "body_clearance",
+      "iterations": 4,
+      "clearance_m": 0.004,
+      "step_m": 0.05,
+      "max_displacement_m": 0.05,
+      "line_search": true
+    },
+    {
+      "kind": "local_intersections",
+      "rounds": 6,
+      "neighbor_rings": 3,
+      "iterations": 12,
+      "max_displacement_m": 0.03,
+      "lock_openings": false
+    },
+    {
+      "kind": "clean",
+      "split_nonmanifold_vertices": true
+    }
+  ]
+}

@@ -383,6 +383,9 @@ def simulate(args, fixedsize_dicts_dir: Path, motion_path: Path, n_steps: int, o
     # investing in an actual garment-length-trimming preprocessing step.
     if args.body_collision_radius is not None:
         sim_cmd += ["--body-collision-radius", str(args.body_collision_radius)]
+    sim_cmd += ['--body-model-root', str(args.body_model_root)]
+    if args.contact_config_json:
+        sim_cmd += ['--contact-config-json', args.contact_config_json]
     run(sim_cmd)
 
 
@@ -511,6 +514,7 @@ def main():
     parser.add_argument("--output-root", type=Path, default=None,
         help="Default: gg_outputs_fixedsize/ next to --contourcraft-root -- SAME as the other "
              "fixedsize scripts, deliberately, so the per-garment and per-outfit caches are shared.")
+    parser.add_argument('--contact-config-json')
     args = parser.parse_args()
     if not isinstance(args.garment_repairs_json, dict):
         parser.error('--garment-repairs-json must be an object')

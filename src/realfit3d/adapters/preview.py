@@ -112,6 +112,8 @@ class PreviewRuntime:
         for key in ["contourcraft_root", "gaugar_root", "body_model_root", "checkpoint", "ccraft_python", "gaugar_python"]:
             command.extend(["--" + key.replace("_", "-"), str(self.path(key))])
         command.extend(self.opacity_options(upper, lower, opacity_mode, opacity_scale))
+        from realfit3d.contact import arguments as contact_arguments
+        command.extend(contact_arguments(self.settings))
         repairs = repair_config(self.settings, [lower['name'], upper['name']], body['gender'])
         if repairs:
             command.extend(['--garment-repairs-json', json.dumps(repairs)])

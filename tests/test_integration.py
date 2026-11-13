@@ -55,6 +55,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(runtime_environment(settings)['REALFIT3D_CC_PYTHON'], str(interpreter))
 
     def test_all_offline_stages_are_plannable_without_gpu(self):
+        self.settings['template_repairs'] = {'Actor08': {k: str(self.root/k) for k in ('source','recipe','output')}}
         for stage in STAGES:
             plan = build_plan(self.settings, stage, 'Actor08')
             self.assertTrue(plan.describe()['missing'])

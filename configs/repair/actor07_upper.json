@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "name": "actor07_upper",
+  "garment_type": "upper",
+  "expected_openings": 4,
+  "coordinate_system": "Source capture, Y-up, metres; do not apply to a differently aligned mesh",
+  "operations": [
+    {
+      "kind": "clean",
+      "remove_nonmanifold_edges": true,
+      "split_nonmanifold_vertices": true
+    },
+    {
+      "kind": "fill_small_holes",
+      "max_perimeter_m": 0.22
+    },
+    {
+      "kind": "smooth_openings",
+      "iterations": 6,
+      "max_displacement_m": 0.008
+    },
+    {
+      "kind": "body_clearance",
+      "iterations": 9,
+      "clearance_m": 0.002,
+      "step_m": 0.004,
+      "max_displacement_m": 0.025,
+      "line_search": true
+    },
+    {
+      "kind": "local_intersections",
+      "rounds": 3,
+      "max_displacement_m": 0.002,
+      "lock_openings": false
+    }
+  ]
+}

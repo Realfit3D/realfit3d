@@ -1,0 +1,7 @@
+# CPU geometry environment validated with Python 3.10 on Linux.
+numpy==1.26.4
+scipy==1.15.3
+open3d==0.20.0
+trimesh==5.2.1
+pymeshlab==2025.7.post1
+xatlas==0.0.11

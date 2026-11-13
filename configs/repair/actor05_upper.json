@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "name": "actor05_upper",
+  "garment_type": "upper",
+  "expected_openings": 4,
+  "coordinate_system": "Source capture, Y-up, metres; do not apply to a differently aligned mesh",
+  "operations": [
+    {
+      "kind": "arap_openings",
+      "fraction": 1.0,
+      "band_width_m": 0.1,
+      "steps": 5,
+      "iterations": 50
+    },
+    {
+      "kind": "rebuild_hem",
+      "cut_y_m": 1.045
+    },
+    {
+      "kind": "remesh",
+      "face_selection": "(y0 < 1.070) && (y1 < 1.070) && (y2 < 1.070)",
+      "edge_m": 0.008
+    }
+  ]
+}

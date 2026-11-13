@@ -4,8 +4,9 @@ import re
 from pathlib import Path
 
 from realfit3d.adapters.preview import ENTRY, WORKERS
+from realfit3d.adapters.stage1 import projection_marker
 
-STAGES = ('prepare', 'initialize', 'reconstruct', 'register-template',
+STAGES = ('prepare', 'initialize', 'reconstruct', 'repair', 'register-template',
           'register-sequence', 'appearance', 'opacity', 'convert', 'dynamics')
 
 
@@ -44,8 +45,7 @@ def build_plan(settings, stage, subject, sequence='Sequence1', gender='male',
     output = path('gg_output_root') / subject
     data = path('gg_data_root') / subject / sequence
     required = []
-    notes = ['UV editing and mask review remain explicit human approval steps.',
-             'Pinned upstream code is not the missing remote S2/S3 dirty diff.']
+    notes = ['Use a separate asset version for each repaired template; review masks and opening semantics.']
     if stage in ('prepare', 'initialize', 'reconstruct'):
         root, python = path('actorshq_root'), path('reconstruction_python')
         script = {'prepare': 'data_preparation.py', 'initialize': 'mesh_initialization.py',
@@ -59,12 +59,35 @@ def build_plan(settings, stage, subject, sequence='Sequence1', gender='male',
             outputs = [str(root / 'gs2mesh/data/custom' / f'{subject}_{sequence}')]
         else:
             args += ['--garment_type', garment_type, '--masker_prompt', prompt, '--masker_automask']
+            projection = settings.get('stage1_projection', 'legacy')
+            if projection not in ('legacy', 'calibrated'):
+                raise ValueError('stage1_projection must be legacy or calibrated')
+            if projection == 'calibrated':
+                args.append('--GS_calibrated_principal_point')
+                required.append(projection_marker(root))
+                notes.append('Calibrated training and stereo projection; install patches/stage1-camera first and use a separate output root for comparisons.')
             required += [root / 'gs2mesh/data/custom' / f'{subject}_{sequence}']
             outputs = [str(output / 'stage1/template.obj')]
             notes.append('Upstream GS2Mesh uses its own automatic masks; quality whitelist is NOT automatically applied.')
         required += [path('actorshq_data_root') / subject / sequence, path('gg_aux_root'), root / 'gs2mesh/gs2mesh_utils']
         command = [str(python), str(ENTRY), '--kind', 'actors', '--root', str(root),
                    '--script', str(root / script), '--', *args]
+    elif stage == 'repair':
+        from realfit3d.settings import ROOT
+        root, python = ROOT, path('reconstruction_python')
+        cfg = settings.get('template_repairs', {}).get(subject)
+        if not cfg:
+            raise ValueError('Configure template_repairs for this subject')
+        script = ROOT / 'src/realfit3d/quality/repair_template.py'
+        args = ['--source', cfg['source'], '--recipe', cfg['recipe'], '--output', cfg['output']]
+        for name in ('body', 'reference', 'body_model'):
+            if cfg.get(name):
+                args += ['--'+name.replace('_', '-'), cfg[name]]
+                required.append(Path(cfg[name]))
+        required += [Path(cfg['source']), Path(cfg['recipe'])]
+        outputs = [str(Path(cfg['output'])/'template_uv.obj'), str(Path(cfg['output'])/'quality.json')]
+        command = [str(python), str(script), *args]
+        notes = ['Builds a separate candidate. Inspect quality.json and install a reviewed candidate into a new asset before registration.']
     elif stage == 'opacity':
         root, python = path('gaugar_root'), path('gaugar_python')
         command = [str(python), str(root / 'train_opacity_v3.py'),
@@ -96,7 +119,7 @@ def build_plan(settings, stage, subject, sequence='Sequence1', gender='male',
             required += [output / 'stage2/Template/template.obj']
         else:
             required += [output / 'stage2' / sequence]
-        required += [data, output / 'stage1/template_uv.obj', path('gg_aux_root')]
+        required += [data, output / 'stage1/template_uv.obj', output / 'stage1/point_cloud.ply', data / 'cameras.json', path('gg_aux_root')]
         outputs = [str(output / ('stage3' if stage == 'appearance' else 'stage2'))]
         command = [str(python), str(root / script), *args]
     else:
@@ -108,7 +131,18 @@ def build_plan(settings, stage, subject, sequence='Sequence1', gender='male',
             args = ['--subject', subject, '--sequence', sequence, '--gender', gender, '--frame', str(frame),
                     '--gg-data-root', str(path('gg_data_root')), '--gg-output-root', str(path('gg_output_root')),
                     '--body-model-root', str(path('body_model_root')), '--checkpoint', str(path('checkpoint')),
-                    '--garment-dicts', str(path('ccraft_data_root') / 'aux_data/garment_dicts')]
+                    '--garment-dicts', str(path('ccraft_data_root') / 'aux_data/garment_dicts/finetune'),
+                    '--frame-rate', str(settings.get('training_frame_rate',30)),
+                    '--validation-frames', str(settings.get('validation_frames',10)),
+                    '--training-updates', str(settings.get('training_updates',1000)),
+                    '--rollout-steps', str(settings.get('training_rollout_steps',8)),
+                    '--checkpoint-every', str(settings.get('training_checkpoint_every',100)),
+                    '--split-repeat', str(settings.get('training_split_repeat',100))]
+            if garment_type == 'lower':
+                support = output / 'stage1/repair_quality.json'
+                required.append(support)
+                args += ['--support-report', str(support)]
+                notes.append('Lower-garment waist handles are installed before initial relaxation.')
             outputs = [str(output / 'stage4'), str(root / f'configs/finetune/{subject}.yaml')]
             notes.append('GauGarConverter writes a generated finetune YAML under the CC checkout; review before training.')
         else:

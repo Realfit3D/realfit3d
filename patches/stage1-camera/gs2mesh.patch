@@ -1,0 +1,191 @@
+diff --git a/gs2mesh_utils/argument_utils.py b/gs2mesh_utils/argument_utils.py
+index fe0982f..a9a59ce 100644
+--- a/gs2mesh_utils/argument_utils.py
++++ b/gs2mesh_utils/argument_utils.py
+@@ -53,6 +53,7 @@ class ArgParser:
+         self.parser.add_argument('--GS_iterations', type=int, default=30000, help='Number of Gaussian Splatting iterations')
+         self.parser.add_argument('--GS_save_test_iterations', type=int, nargs='+', default=[7000, 30000], help='Gaussian Splatting test iterations to save')
+         self.parser.add_argument('--GS_white_background', action='store_true', help='Use white background in Gaussian Splatting')
++        self.parser.add_argument('--GS_calibrated_principal_point', action='store_true', help='Use calibrated pixel principal points for training and stereo rendering; requires matching checkpoints')
+ 
+         # Renderer params
+         self.parser.add_argument('--renderer_baseline_absolute', type=float, default=None, help='Absolute value of the renderer baseline (None uses 7 percent of scene radius)')
+diff --git a/gs2mesh_utils/eval_utils.py b/gs2mesh_utils/eval_utils.py
+index 4627bbd..d22b4dd 100644
+--- a/gs2mesh_utils/eval_utils.py
++++ b/gs2mesh_utils/eval_utils.py
+@@ -31,6 +31,8 @@ def create_strings(args):
+     dict: A dictionary containing the formatted strings.
+     """
+     splatting_string = f"{args.dataset_name}{'_nw' if args.GS_white_background == False else ''}_iterations{args.GS_iterations}"
++    if getattr(args, 'GS_calibrated_principal_point', False):
++        splatting_string += '_calibrated'
+     baseline_string = f"{args.renderer_baseline_absolute}a" if args.renderer_baseline_absolute is not None else f"{float2str(args.renderer_baseline_percentage)}p"
+     dataset_string = f"{splatting_string}_{args.stereo_model}_baseline{baseline_string}"
+     TSDF_string = f"{args.colmap_name}_{dataset_string}_mask{'1' if args.TSDF_use_mask else '0'}_occ{'1' if args.TSDF_use_occlusion_mask else '0'}_scale{float2str(float(args.TSDF_scale))}_voxel{str(args.TSDF_voxel)}_512_trunc{args.TSDF_min_depth_baselines}_{args.TSDF_max_depth_baselines}"
+diff --git a/gs2mesh_utils/renderer_utils.py b/gs2mesh_utils/renderer_utils.py
+index ac561ea..79a8d4a 100644
+--- a/gs2mesh_utils/renderer_utils.py
++++ b/gs2mesh_utils/renderer_utils.py
+@@ -11,6 +11,7 @@ from argparse import ArgumentParser, Namespace
+ import matplotlib.pyplot as plt
+ import plotly.graph_objects as go
+ import copy
++import ast
+ from scipy.optimize import least_squares
+ 
+ from gs2mesh_utils.colmap_utils import poses_from_file
+@@ -320,6 +321,22 @@ class Renderer:
+         Returns:
+         None
+         """
++        requested = getattr(self.args, 'GS_calibrated_principal_point', False)
++        config_path = os.path.join(self.splatting_dir, 'cfg_args')
++        trained = False
++        if os.path.isfile(config_path):
++            with open(config_path) as stream:
++                config = ast.parse(stream.read(), mode='eval').body
++            if not isinstance(config, ast.Call) or not isinstance(config.func, ast.Name) or config.func.id != 'Namespace':
++                raise ValueError('Expected Namespace metadata in cfg_args')
++            for keyword in config.keywords:
++                if keyword.arg == 'calibrated_principal_point':
++                    trained = ast.literal_eval(keyword.value)
++        elif requested:
++            raise ValueError('Calibrated rendering requires checkpoint projection metadata in cfg_args')
++        if trained != requested:
++            raise ValueError('Training and stereo rendering must use the same principal-point convention')
++
+         parser = ArgumentParser(description="Testing script parameters")
+         model = ModelParams(parser, sentinel=True)
+         pipeline = PipelineParams(parser)
+@@ -347,6 +364,7 @@ class Renderer:
+                          source_path=self.colmap_dir, 
+                          target='scene', 
+                          white_background=self.white_background)
++        args.calibrated_principal_point = getattr(self.args, 'GS_calibrated_principal_point', False)
+         
+         dataset = model.extract(args)
+         self.pipeline = pipeline.extract(args)
+@@ -383,7 +401,8 @@ class Renderer:
+                 fx, fy = camera['fx'], camera['fy']
+                 FoVx = 2 * np.arctan2(w, 2 * fx)
+                 FoVy = 2 * np.arctan2(h, 2 * fy)
+-                view = cameras.Camera(0, R, T, FoVx, FoVy, torch.rand(3,h,w), None, "abcd", 0)
++                principal = {'cx': camera['cx'], 'cy': camera['cy']} if getattr(self.args, 'GS_calibrated_principal_point', False) else {}
++                view = cameras.Camera(0, R, T, FoVx, FoVy, torch.zeros(3,h,w), None, "abcd", 0, **principal)
+                 render_path = os.path.join(os.path.join(output_dir))
+                 os.makedirs(render_path, exist_ok=True)
+                 rendering = (self.render_func(view, self.gaussians, self.pipeline, self.background)["render"].permute(1, 2, 0) * 255).cpu().numpy()
+diff --git a/third_party/gaussian-splatting/arguments/__init__.py b/third_party/gaussian-splatting/arguments/__init__.py
+index 1e13a55..0ff2e25 100644
+--- a/third_party/gaussian-splatting/arguments/__init__.py
++++ b/third_party/gaussian-splatting/arguments/__init__.py
+@@ -54,6 +54,7 @@ class ModelParams(ParamGroup):
+         self._white_background = False
+         self.data_device = "cuda"
+         self.eval = False
++        self.calibrated_principal_point = False
+         super().__init__(parser, "Loading Parameters", sentinel)
+ 
+     def extract(self, args):
+diff --git a/third_party/gaussian-splatting/scene/cameras.py b/third_party/gaussian-splatting/scene/cameras.py
+index abf6e52..df4d33d 100644
+--- a/third_party/gaussian-splatting/scene/cameras.py
++++ b/third_party/gaussian-splatting/scene/cameras.py
+@@ -17,7 +17,7 @@ from utils.graphics_utils import getWorld2View2, getProjectionMatrix
+ class Camera(nn.Module):
+     def __init__(self, colmap_id, R, T, FoVx, FoVy, image, gt_alpha_mask,
+                  image_name, uid,
+-                 trans=np.array([0.0, 0.0, 0.0]), scale=1.0, data_device = "cuda"
++                 trans=np.array([0.0, 0.0, 0.0]), scale=1.0, data_device = "cuda", cx=None, cy=None
+                  ):
+         super(Camera, self).__init__()
+ 
+@@ -52,7 +52,18 @@ class Camera(nn.Module):
+         self.scale = scale
+ 
+         self.world_view_transform = torch.tensor(getWorld2View2(R, T, trans, scale)).transpose(0, 1).cuda()
+-        self.projection_matrix = getProjectionMatrix(znear=self.znear, zfar=self.zfar, fovX=self.FoVx, fovY=self.FoVy).transpose(0,1).cuda()
++        projection = getProjectionMatrix(znear=self.znear, zfar=self.zfar, fovX=self.FoVx, fovY=self.FoVy)
++        if (cx is None) != (cy is None):
++            raise ValueError('Provide both cx and cy, or neither')
++        if cx is not None:
++            if not np.isfinite([cx, cy]).all():
++                raise ValueError('Principal points must be finite')
++            # ndc2Pix(v, size) = ((v + 1) * size - 1) / 2.
++            projection[0, 2] = (2 * cx + 1) / self.image_width - 1
++            projection[1, 2] = (2 * cy + 1) / self.image_height - 1
++        self.cx = (self.image_width - 1) / 2 if cx is None else float(cx)
++        self.cy = (self.image_height - 1) / 2 if cy is None else float(cy)
++        self.projection_matrix = projection.transpose(0,1).cuda()
+         self.full_proj_transform = (self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
+         self.camera_center = self.world_view_transform.inverse()[3, :3]
+ 
+diff --git a/third_party/gaussian-splatting/scene/dataset_readers.py b/third_party/gaussian-splatting/scene/dataset_readers.py
+index 2a6f904..8300e80 100644
+--- a/third_party/gaussian-splatting/scene/dataset_readers.py
++++ b/third_party/gaussian-splatting/scene/dataset_readers.py
+@@ -34,6 +34,8 @@ class CameraInfo(NamedTuple):
+     image_name: str
+     width: int
+     height: int
++    cx: float = None
++    cy: float = None
+ 
+ class SceneInfo(NamedTuple):
+     point_cloud: BasicPointCloud
+@@ -84,11 +86,13 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder):
+ 
+         if intr.model=="SIMPLE_PINHOLE":
+             focal_length_x = intr.params[0]
++            cx, cy = intr.params[1:3]
+             FovY = focal2fov(focal_length_x, height)
+             FovX = focal2fov(focal_length_x, width)
+         elif intr.model=="PINHOLE":
+             focal_length_x = intr.params[0]
+             focal_length_y = intr.params[1]
++            cx, cy = intr.params[2:4]
+             FovY = focal2fov(focal_length_y, height)
+             FovX = focal2fov(focal_length_x, width)
+         else:
+@@ -99,7 +103,8 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder):
+         image = Image.open(image_path)
+ 
+         cam_info = CameraInfo(uid=uid, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
+-                              image_path=image_path, image_name=image_name, width=width, height=height)
++                              image_path=image_path, image_name=image_name, width=width, height=height,
++                              cx=float(cx), cy=float(cy))
+         cam_infos.append(cam_info)
+     sys.stdout.write('\n')
+     return cam_infos
+@@ -257,4 +262,4 @@ def readNerfSyntheticInfo(path, white_background, eval, extension=".png"):
+ sceneLoadTypeCallbacks = {
+     "Colmap": readColmapSceneInfo,
+     "Blender" : readNerfSyntheticInfo
+-}
+\ No newline at end of file
++}
+diff --git a/third_party/gaussian-splatting/utils/camera_utils.py b/third_party/gaussian-splatting/utils/camera_utils.py
+index 1a54d0a..c338c97 100644
+--- a/third_party/gaussian-splatting/utils/camera_utils.py
++++ b/third_party/gaussian-splatting/utils/camera_utils.py
+@@ -46,10 +46,18 @@ def loadCam(args, id, cam_info, resolution_scale):
+     if resized_image_rgb.shape[1] == 4:
+         loaded_mask = resized_image_rgb[3:4, ...]
+ 
++    cx = cy = None
++    if getattr(args, 'calibrated_principal_point', False):
++        if cam_info.cx is None or cam_info.cy is None:
++            raise ValueError('Calibrated projection requires principal points in camera metadata')
++        # Preserve pixel-center locations under the same resize as the input image.
++        cx = (cam_info.cx + 0.5) * resolution[0] / cam_info.width - 0.5
++        cy = (cam_info.cy + 0.5) * resolution[1] / cam_info.height - 0.5
++
+     return Camera(colmap_id=cam_info.uid, R=cam_info.R, T=cam_info.T, 
+                   FoVx=cam_info.FovX, FoVy=cam_info.FovY, 
+                   image=gt_image, gt_alpha_mask=loaded_mask,
+-                  image_name=cam_info.image_name, uid=id, data_device=args.data_device)
++                  image_name=cam_info.image_name, uid=id, data_device=args.data_device, cx=cx, cy=cy)
+ 
+ def cameraList_from_camInfos(cam_infos, resolution_scale, args):
+     camera_list = []

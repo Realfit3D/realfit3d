@@ -22,6 +22,9 @@
 
 ContourCraft 已固定至 `d606432c2f7e96b05664e6a4ffb9d1cb98705baf`；ActorsHQ-for-Gaussian-Garments 已固定至 `46651f55030407ea25463ed070eed9f7e837a9af`，其 GS2Mesh gitlink 為 `b08a68f2b896301472d25fe3f5287b5b1bf1b737`。遠端訓練目錄的未提交修改另列於待比對項目。
 
+Stage 1 標定主點支援以選用 patch 提供，不更動上述基準 commit。
+修改檔案、安裝與舊權重相容方式見[相機設定](STAGE1_CAMERA.zh-TW.md)。
+
 ## 本組模組
 
 Web 與 API 接收身形、衣物和動作選擇，試衣 worker 將條件轉成
