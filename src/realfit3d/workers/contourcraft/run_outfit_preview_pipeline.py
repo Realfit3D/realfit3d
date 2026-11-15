@@ -395,6 +395,10 @@ def opacity_arguments(args):
         arguments += ['--opacity-garments', *args.opacity_garments]
     for mapping in args.v3_controller:
         arguments.extend(["--v3-controller", mapping])
+    if args.opacity_scale < 1.0:
+        # Translucent garment: do not cull Gaussians of the garments behind it (otherwise the
+        # inner garment disappears wherever the translucent one covers it).
+        arguments.append("--see-through-layers")
     return arguments
 
 
